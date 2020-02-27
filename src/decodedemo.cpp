@@ -74,7 +74,7 @@ bool GetCropCode(Mat& srcImg, Mat& dst)
 	
 
 	cvtColor(warpPerspective_dst, dst, COLOR_BGR2GRAY);
-	threshold(dst, dst, 150, 255, THRESH_BINARY);
+	threshold(dst, dst, 150, 255, THRESH_BINARY | THRESH_OTSU);
 
 	return true;
 }
