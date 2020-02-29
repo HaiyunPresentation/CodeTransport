@@ -7,13 +7,13 @@
 #define BLOCK_BITS 256
 #define OUTPUT_ROWS 800
 #define OUTPUT_COLS 800
-#define BENCHMARK_SIZE 64
+#define ANCHOR_SIZE 64
 using namespace std;
 using namespace cv;
 
 
-//把灰度图任一像素改成指定灰度
-//黑为0，白为255
+//Set the value of a pixel is a gray image
+//Black is 0, and white is 255
 void DrawColor(Mat& img, int i, int j, int value)
 {
 	if (value < 0 || value>255)
@@ -41,30 +41,29 @@ void DrawBlock(Mat& img, int i, int j, int value)
 	}
 }
 
-//打印一个定位点
-void PrintBenchmark(Mat& img, int row, int col,int size)
+void PrintAnchor(Mat& img, int row, int col, int size)
 {
-	for (int i = 0; i < size / 8*7; i++)
+	for (int i = 0; i < size / 8 * 7; i++)
 	{
-		if (i < size/8 || (i >= size / 8*6 && i < size / 8*7))
+		if (i < size / 8 || (i >= size / 8 * 6 && i < size / 8 * 7))
 		{
-			for (int j = 0; j < size / 8*7; j++)
+			for (int j = 0; j < size / 8 * 7; j++)
 			{
 				DrawColor(img, i + row, j + col, 0);
 			}
 		}
 		else
 		{
-			for (int j = 0; j < size/8; j++)
+			for (int j = 0; j < size / 8; j++)
 			{
 				DrawColor(img, i + row, j + col, 0);
-				DrawColor(img, i + row, j + col + size / 8*6, 0);
+				DrawColor(img, i + row, j + col + size / 8 * 6, 0);
 			}
 
 		}
-		if (i >= size / 8*2 && i < size / 8*5)
+		if (i >= size / 8 * 2 && i < size / 8 * 5)
 		{
-			for (int j = size / 8*2; j < size / 8*5; j++)
+			for (int j = size / 8 * 2; j < size / 8 * 5; j++)
 			{
 				DrawColor(img, i + row, j + col, 0);
 			}
@@ -72,11 +71,12 @@ void PrintBenchmark(Mat& img, int row, int col,int size)
 	}
 	return;
 }
-void AddBenchmark(Mat& img)
+
+void PrintBenchmark(Mat& img)
 {
-	PrintBenchmark(img, 0, 0,BENCHMARK_SIZE);
-	PrintBenchmark(img, PIXEL_ROWS/BLOCK_ROWS*(BLOCK_ROWS-2) + BENCHMARK_SIZE/8, 0,BENCHMARK_SIZE);
-	PrintBenchmark(img, 0, PIXEL_ROWS/BLOCK_ROWS* (BLOCK_ROWS - 2) + BENCHMARK_SIZE/8,BENCHMARK_SIZE);
+	PrintAnchor(img, 0, 0, ANCHOR_SIZE);
+	PrintAnchor(img, PIXEL_ROWS / BLOCK_ROWS * (BLOCK_ROWS - 2) + ANCHOR_SIZE / 8, 0, ANCHOR_SIZE);
+	PrintAnchor(img, 0, PIXEL_ROWS / BLOCK_ROWS * (BLOCK_ROWS - 2) + ANCHOR_SIZE / 8, ANCHOR_SIZE);
 	for (int total_bit = 0; total_bit < BLOCK_BITS; total_bit++)
 	{
 		if (total_bit / BLOCK_ROWS < 2 && (total_bit % BLOCK_ROWS < 2 || total_bit % BLOCK_ROWS >= 14)
@@ -103,7 +103,7 @@ int main()
 		cout << "OK" << endl;
 		Mat srcImg(PIXEL_ROWS, PIXEL_ROWS, CV_8UC1, Scalar(255));
 
-		AddBenchmark(srcImg);
+		PrintBenchmark(srcImg);
 
 		int total_bit = 0;
 		for (int i = 0; i < BLOCK_BITS / 8 - 2; i++)
@@ -151,7 +151,7 @@ int main()
 		{
 			for (int j = 0; j < PIXEL_ROWS; j++)
 			{
-				*(outputImg.data + outputImg.step[0] * (i + (OUTPUT_ROWS - PIXEL_ROWS)/2) + outputImg.step[1] * (j + (OUTPUT_COLS - PIXEL_ROWS)/2))
+				*(outputImg.data + outputImg.step[0] * (i + (OUTPUT_ROWS - PIXEL_ROWS) / 2) + outputImg.step[1] * (j + (OUTPUT_COLS - PIXEL_ROWS) / 2))
 					= *(srcImg.data + srcImg.step[0] * i + srcImg.step[1] * j);
 			}
 		}
