@@ -3,11 +3,12 @@
 #include <opencv2/videoio.hpp>
 #include <windows.h>
 #define PIXEL_ROWS 512
-#define BLOCK_ROWS 16
-#define BLOCK_BITS 256
+#define BLOCK_ROWS 32
+#define BLOCK_BITS 1024
 #define OUTPUT_ROWS 800
 #define OUTPUT_COLS 800
 #define ANCHOR_SIZE 64
+#define OUTPUT_FPS 5
 using namespace std;
 using namespace cv;
 
@@ -75,17 +76,27 @@ void PrintAnchor(Mat& img, int row, int col, int size)
 void PrintBenchmark(Mat& img)
 {
 	PrintAnchor(img, 0, 0, ANCHOR_SIZE);
-	PrintAnchor(img, PIXEL_ROWS / BLOCK_ROWS * (BLOCK_ROWS - 2) + ANCHOR_SIZE / 8, 0, ANCHOR_SIZE);
-	PrintAnchor(img, 0, PIXEL_ROWS / BLOCK_ROWS * (BLOCK_ROWS - 2) + ANCHOR_SIZE / 8, ANCHOR_SIZE);
+	PrintAnchor(img, PIXEL_ROWS / BLOCK_ROWS * (BLOCK_ROWS - 4) + ANCHOR_SIZE / 8, 0, ANCHOR_SIZE);
+	PrintAnchor(img, 0, PIXEL_ROWS / BLOCK_ROWS * (BLOCK_ROWS - 4) + ANCHOR_SIZE / 8, ANCHOR_SIZE);
 	for (int total_bit = 0; total_bit < BLOCK_BITS; total_bit++)
 	{
-		if (total_bit / BLOCK_ROWS < 2 && (total_bit % BLOCK_ROWS < 2 || total_bit % BLOCK_ROWS >= 14)
-			|| total_bit / BLOCK_ROWS >= 14 && total_bit % BLOCK_ROWS < 2)
+		if (total_bit / BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)
+			&& (total_bit % BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)
+				|| total_bit % BLOCK_ROWS >= BLOCK_ROWS - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS))
+			|| total_bit / BLOCK_ROWS >= BLOCK_ROWS - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)
+			&& total_bit % BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS))
+		//if((total_bit/32<4|| total_bit / 32 >=28)&& (total_bit % 32 < 4 || total_bit % 32 >= 28))
 			continue;
-		if (!(total_bit % 2) && !((total_bit / 16) % 2) || (total_bit % 2) && ((total_bit / 16) % 2))
+		if (!(total_bit % 2) && !((total_bit / BLOCK_ROWS) % 2) || (total_bit % 2) && ((total_bit / BLOCK_ROWS) % 2))
 			DrawBlock(img, total_bit / BLOCK_ROWS, total_bit % BLOCK_ROWS, 0);
 	}
-
+	DrawBlock(img, BLOCK_ROWS - 2, BLOCK_ROWS - 2, 255);
+	DrawBlock(img, BLOCK_ROWS - 1, BLOCK_ROWS - 2, 255);
+	DrawBlock(img, BLOCK_ROWS - 2, BLOCK_ROWS - 1, 255);
+	DrawBlock(img, BLOCK_ROWS-1,BLOCK_ROWS-1, 255);
+	PrintAnchor(img, PIXEL_ROWS / BLOCK_ROWS * (BLOCK_ROWS - 2)+ANCHOR_SIZE / 16, PIXEL_ROWS / BLOCK_ROWS * (BLOCK_ROWS - 2) + ANCHOR_SIZE / 16, ANCHOR_SIZE/2);
+	//imshow("Benchmark", img);
+	//waitKey();
 }
 
 int main()
@@ -93,9 +104,9 @@ int main()
 	//unsigned char str[] = "Hh十分惭愧，我们暂时还不能明白黄指导项目的高深奥义。所以说，还是too young啦！你们呐，Naive！！！";
 	FILE* fp = fopen("in.bin", "r");
 	VideoWriter writer;
-	int fps = 5;
+	//int fps = 5;
 	Mat outputImg(OUTPUT_ROWS, OUTPUT_COLS, CV_8UC1);
-	writer.open("in.mp4", VideoWriter::fourcc('A', 'V', 'C', '1'), fps, outputImg.size(), false);
+	writer.open("in.mp4", VideoWriter::fourcc('A', 'V', 'C', '1'), OUTPUT_FPS, outputImg.size(), false);
 	int flames = 0;
 	bool exit_sign = false;
 	while (!exit_sign)
@@ -106,7 +117,7 @@ int main()
 		PrintBenchmark(srcImg);
 
 		int total_bit = 0;
-		for (int i = 0; i < BLOCK_BITS / 8 - 2; i++)
+		for (int i = 0; i < BLOCK_BITS / 8-8; i++)
 		{
 			unsigned char t;
 
@@ -119,8 +130,9 @@ int main()
 
 			for (int k = 0; k < 8; k++)
 			{
-				while (total_bit / BLOCK_ROWS < 2 && (total_bit % BLOCK_ROWS < 2 || total_bit % BLOCK_ROWS >= 14)
-					|| total_bit / BLOCK_ROWS >= 14 && total_bit % BLOCK_ROWS < 2)
+				//while (total_bit / BLOCK_ROWS < 2 && (total_bit % BLOCK_ROWS < 2 || total_bit % BLOCK_ROWS >= 28)
+				//	|| total_bit / BLOCK_ROWS >= 28 && total_bit % BLOCK_ROWS < 2)
+				while ((total_bit / 32 < 4 || total_bit / 32 >= 28) && (total_bit % 32 < 4 || total_bit % 32 >= 28))
 				{
 					total_bit++;
 				}
