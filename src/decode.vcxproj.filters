@@ -18,5 +18,16 @@
     <ClCompile Include="decodedemo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="CodeDetect.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="decode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CodeDetect.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
