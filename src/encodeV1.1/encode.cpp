@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         #ifdef  __linux__
             cv::imwrite("output/Frame" + std::to_string(FrameConter) + ".jpg", out);
         #elif   _WIN64
-            cv::imwrite("Frame" + std::to_string(FrameConter) + ".jpg", out);
+            cv::imwrite("output\\Frame" + std::to_string(FrameConter) + ".jpg", out);
             WinVideo << out;
         #endif
     }
