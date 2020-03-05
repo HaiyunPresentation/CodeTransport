@@ -3,7 +3,7 @@
 
 #ifdef  __linux__
     #include <stdlib.h>
-#elif   WIN64
+#elif _WIN64
     #include <opencv2/videoio.hpp>
     #include <windows.h>
 #endif
@@ -14,10 +14,10 @@ int main(int argc, char *argv[])
     // FILE* file = fopen(argv[1], "r");
     FILE* file = fopen("in.bin", "r");
 
-    // if in windows, write frames into this
-    #ifdef WIN64
-	VideoWriter WinVideo;
-	WinVideo.open("Video.avi", VideoWriter::fourcc('A', 'V', 'C', '1'), VIDEO_FPS, outputImg.size(), false);
+    // if in Windows, write frames into this
+    #ifdef _WIN64
+	cv::VideoWriter WinVideo;
+	WinVideo.open("Video.avi",cv::VideoWriter::fourcc('A', 'V', 'C', '1'), VIDEO_FPS, cv::Size(512,512), false);
     #endif
 
     Encoder coder;
@@ -45,14 +45,15 @@ int main(int argc, char *argv[])
         FrameConter++;
         #ifdef  __linux__
             cv::imwrite("output/Frame" + std::to_string(FrameConter) + ".jpg", out);
-        #elif   WIN64
-            cv::imwrite("output\\Frame" + std::to_string(FrameConter) + ".jpg", out);
+        #elif   _WIN64
+            cv::imwrite("Frame" + std::to_string(FrameConter) + ".jpg", out);
             WinVideo << out;
         #endif
     }
 
     std::fclose(file);
 
+	// if running in Linux, we use FFmpeg command
     #ifdef __linux__
     system(("ffmpeg -y -framerate "+ std::to_string(VIDEO_FPS) +
       " -i \'output/Frame%d.jpg\' output/Video.avi").c_str());

@@ -5,7 +5,7 @@ Encoder::Encoder():
   codeMatMid(CODEMAT_T_SIZE, CODEMAT_M_SIZE, CV_8UC1),
   codeMatBot(ANCHOR_SIZE, CODEMAT_T_SIZE, CV_8UC1),
   baseAnchor(cv::Mat::zeros(BASE_ANCHOR_SIZE, BASE_ANCHOR_SIZE, CV_8UC1)),
-  outSize(cv::Size(PIXCEL_SIZE, PIXCEL_SIZE)){
+  outSize(cv::Size(PIXEL_SIZE, PIXEL_SIZE)){
     this->writeByte = 0;
 
     for (size_t bAnchorRow = 1; bAnchorRow < BASE_ANCHOR_SIZE - 1; bAnchorRow++){
@@ -31,7 +31,7 @@ void Encoder::setOutSize(cv::Size outSize){
     this->outSize=outSize;
 }
 
-void Encoder::setOutSize(size_t size_row=PIXCEL_SIZE, size_t size_col=PIXCEL_SIZE){
+void Encoder::setOutSize(size_t size_row=PIXEL_SIZE, size_t size_col=PIXEL_SIZE){
     this->setOutSize(cv::Size(size_row, size_col));
 }
 
@@ -96,10 +96,10 @@ void Encoder::outFrame(cv::Mat& out){
     cv::Mat outRect = out(cv::Rect(0, 0, tmpMat.cols, tmpMat.rows));
     tmpMat.copyTo(outRect);
             // Add the top-left Anchor
-    outRect = out(cv::Rect(0, PIXCEL_SIZE - BIG_ANCHOR_SIZE, tmpMat.cols, tmpMat.rows));
+    outRect = out(cv::Rect(0, PIXEL_SIZE - BIG_ANCHOR_SIZE, tmpMat.cols, tmpMat.rows));
     tmpMat.copyTo(outRect);
             // Add the bottom-left Anchor
-    outRect = out(cv::Rect(PIXCEL_SIZE - BIG_ANCHOR_SIZE, 0, tmpMat.cols, tmpMat.rows));
+    outRect = out(cv::Rect(PIXEL_SIZE - BIG_ANCHOR_SIZE, 0, tmpMat.cols, tmpMat.rows));
     tmpMat.copyTo(outRect);
             // Add the top-right Anchor
 
