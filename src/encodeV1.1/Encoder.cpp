@@ -5,7 +5,7 @@ Encoder::Encoder():
   codeMatMid(CODEMAT_T_SIZE, CODEMAT_M_SIZE, CV_8UC1),
   codeMatBot(ANCHOR_SIZE, CODEMAT_T_SIZE, CV_8UC1),
   baseAnchor(cv::Mat::zeros(BASE_ANCHOR_SIZE, BASE_ANCHOR_SIZE, CV_8UC1)),
-  outSize(cv::Size(PIXEL_SIZE, PIXEL_SIZE)){
+  outSize(cv::Size(OUT_FRAME_SIZE, OUT_FRAME_SIZE)){
     this->writeByte = 0;
 
     for (size_t bAnchorRow = 1; bAnchorRow < BASE_ANCHOR_SIZE - 1; bAnchorRow++){
@@ -31,7 +31,7 @@ void Encoder::setOutSize(cv::Size outSize){
     this->outSize=outSize;
 }
 
-void Encoder::setOutSize(size_t size_row=PIXEL_SIZE, size_t size_col=PIXEL_SIZE){
+void Encoder::setOutSize(size_t size_row=OUT_FRAME_SIZE, size_t size_col=OUT_FRAME_SIZE){
     this->setOutSize(cv::Size(size_row, size_col));
 }
 
@@ -78,36 +78,44 @@ void Encoder::addByte(byte data, bool isEOF){
 void Encoder::outFrame(cv::Mat& out){
     cv::Mat anchorMat(ANCHOR_SIZE, ANCHOR_SIZE, CV_8UC1, cv::Scalar(WHITE_PIX));
                             // a white part to make up the part of Anchor
-    cv::Mat concatMat;      // concat the anchorMat * 4 with the codeMat
+    cv::Mat QRcode;         // concat the anchorMat * 4 with the codeMat
     cv::Mat tmpMat;         // temp
     
     cv::hconcat(anchorMat, this->codeMatTop, tmpMat);
-    cv::hconcat(tmpMat, anchorMat, concatMat);              // topMat into concatMat
-    cv::vconcat(concatMat, this->codeMatMid, concatMat);    // midMat into concatMat
+    cv::hconcat(tmpMat, anchorMat, out);                // topMat into QR code(save in out)
+    cv::vconcat(out, this->codeMatMid, out);            // midMat into QR code
     cv::hconcat(anchorMat, this->codeMatBot, tmpMat);
     cv::hconcat(tmpMat, anchorMat, tmpMat);
-    cv::vconcat(concatMat, tmpMat, concatMat);              // botMat into concatMat
-            // concate is now done
-        
-    cv::resize(concatMat, out, this->outSize, 0.0f, 0.0f, 0);  // Extend to (512 * 512)
+    cv::vconcat(out, tmpMat, out);                      // botMat into QR code
+            // QR code is now done(save in out)
 
-    cv::resize(this->baseAnchor, tmpMat, cv::Size(BIG_ANCHOR_SIZE, BIG_ANCHOR_SIZE), 0.0f, 0.0f, 0);
-            // Extend big Anchor
-    cv::Mat outRect = out(cv::Rect(0, 0, tmpMat.cols, tmpMat.rows));
-    tmpMat.copyTo(outRect);
+    cv::resize(out, QRcode, cv::Size(PIXEL_SIZE, PIXEL_SIZE), 0.0f, 0.0f, 0);
+            // Extend to (512 * 512), & save QR code in 'QRcode'
+
+
+    cv::resize(this->baseAnchor, anchorMat, cv::Size(BIG_ANCHOR_SIZE, BIG_ANCHOR_SIZE), 0.0f, 0.0f, 0);
+            // Extend to big Anchor
+    cv::Mat outRect = QRcode(cv::Rect(0, 0, anchorMat.cols, anchorMat.rows));
+    anchorMat.copyTo(outRect);
             // Add the top-left Anchor
-    outRect = out(cv::Rect(0, PIXEL_SIZE - BIG_ANCHOR_SIZE, tmpMat.cols, tmpMat.rows));
-    tmpMat.copyTo(outRect);
+    outRect = QRcode(cv::Rect(0, PIXEL_SIZE - BIG_ANCHOR_SIZE, anchorMat.cols, anchorMat.rows));
+    anchorMat.copyTo(outRect);
             // Add the bottom-left Anchor
-    outRect = out(cv::Rect(PIXEL_SIZE - BIG_ANCHOR_SIZE, 0, tmpMat.cols, tmpMat.rows));
-    tmpMat.copyTo(outRect);
+    outRect = QRcode(cv::Rect(PIXEL_SIZE - BIG_ANCHOR_SIZE, 0, anchorMat.cols, anchorMat.rows));
+    anchorMat.copyTo(outRect);
             // Add the top-right Anchor
 
-    cv::resize(this->baseAnchor, tmpMat, cv::Size(SML_ANCHOR_SIZE, SML_ANCHOR_SIZE), 0.0f, 0.0f, 0);
-    outRect = out(cv::Rect(this->outSize.width - SML_ANCHOR_SIZE, this->outSize.height - SML_ANCHOR_SIZE, tmpMat.cols, tmpMat.rows));
-    tmpMat.copyTo(outRect);
-            // Add the bottom-right Anchor
+    cv::resize(this->baseAnchor, anchorMat, cv::Size(SML_ANCHOR_SIZE, SML_ANCHOR_SIZE), 0.0f, 0.0f, 0);
 
-    // cv::imshow("outFram", out);
-    // cv::waitKey();
+    outRect = QRcode(cv::Rect(PIXEL_SIZE - SML_ANCHOR_SIZE, PIXEL_SIZE - SML_ANCHOR_SIZE,
+      anchorMat.cols, anchorMat.rows));
+    anchorMat.copyTo(outRect);
+            // Add the bottom-right Anchor
+    
+    out = cv::Mat(this->outSize, CV_8UC1, cv::Scalar(WHITE_PIX));
+            // set out as white backgroud
+    outRect = out(cv::Rect((this->outSize.width - PIXEL_SIZE)/2, (this->outSize.height - PIXEL_SIZE)/2,
+      QRcode.cols, QRcode.rows));
+    QRcode.copyTo(outRect);
+            // add QRcode into white backgroud
 }

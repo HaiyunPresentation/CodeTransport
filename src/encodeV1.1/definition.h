@@ -2,7 +2,8 @@
 #define CODEMAT_T_SIZE      24
 #define ANCHOR_SIZE         4
 #define BASE_ANCHOR_SIZE    7
-#define PIXEL_SIZE         512
+#define PIXEL_SIZE          512
+#define OUT_FRAME_SIZE      800
 
 #define BIG_ANCHOR_RATE     8
 #define SML_ANCHOR_RATE     4
