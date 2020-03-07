@@ -1,4 +1,4 @@
-#include "CodeDetect.h"
+#include "Detector.h"
 
 using namespace std;
 using namespace cv;

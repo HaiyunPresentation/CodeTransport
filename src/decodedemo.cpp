@@ -1,5 +1,5 @@
 #include "decode.h"
-#include "CodeDetect.h"
+#include "Detector.h"
 
 #define BLOCK_ROWS 32
 #define BLOCK_BITS 1024
