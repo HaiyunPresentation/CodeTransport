@@ -9,14 +9,14 @@ using namespace std;
 using namespace cv;
 
 
-
+Detector detector;
 
 
 int Decode(Mat img, bool& end, int order)
 {
 	FILE* fp = fopen("out.bin", "a+");
 	Mat resizeImg;
-	if (!CodeDetect::GetCropCode(img, resizeImg))
+	if (!detector.GetCropCode(img, resizeImg))
 	{
 		cout << "Can't detect " << order << endl;
 		imwrite("v0302" + to_string(order) + ".jpg", img);
@@ -94,7 +94,7 @@ int NaiveCodeVideoCapture()
 	{
 		vc.read(srcImg);
 		if (!srcImg.data) break;
-	} while (!CodeDetect::IsCode(srcImg));
+	} while (!detector.IsCode(srcImg));
 	while (true)
 	{
 

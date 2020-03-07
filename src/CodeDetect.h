@@ -5,9 +5,10 @@
 
 #endif // !_CODE_DETECT
 
-
-namespace CodeDetect
+class Detector
 {
+
+public:
 	//An approximate range
 	bool IsQRRate(float rate);
 
@@ -19,25 +20,27 @@ namespace CodeDetect
 
 	bool IsQRColorRate(cv::Mat& image, int flag);
 
-	cv::Mat CropImage(cv::Mat& img, cv::RotatedRect& rotatedRect);
-
-	int JudgeTopLeft(cv::Point2f* center);
-
-	cv::Mat Crop4AnchorCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f center[4], int topLeftOrder, int buttonRightOrder);
-
-	cv::Mat Crop3AnchorCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f topLeft);
-
 	bool IsAnchor(std::vector<cv::Point>& contour, cv::Mat& img, int i);
 
 	int FindAnchors(cv::Mat& srcImg, std::vector<std::vector<cv::Point>>& qrPoint);
 
+	cv::Mat CropImage(cv::Mat& img, cv::RotatedRect& rotatedRect);
+
 	int CenterPoint(std::vector<cv::Point>& anchor, cv::Point2f& p);
 
-	cv::Mat resize4AnchorCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
-
+	int JudgeTopLeft(cv::Point2f* center);
+ 
 	bool IsCode(cv::Mat& srcImg);
 
 	bool GetCropCode(cv::Mat& srcImg, cv::Mat& dst);
+
+	cv::Mat Crop3AnchorCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f topLeft);
+
+	cv::Mat Crop4AnchorCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f center[4], int topLeftOrder, int buttonRightOrder);
+
+	cv::Mat resize3AnchorCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
+
+	cv::Mat resize4AnchorCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
 
 
 };
