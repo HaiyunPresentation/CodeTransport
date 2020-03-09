@@ -17,6 +17,6 @@
 #define BLACK_PIX           0
 #define WHITE_PIX           255
 
-#define VIDEO_FPS           5
+#define VIDEO_FPS           6
 
 typedef unsigned char byte;
