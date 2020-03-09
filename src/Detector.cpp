@@ -238,12 +238,12 @@ int Detector::JudgeTopLeft(Point2f* center)
 
 Mat Detector::Crop4AnchorCode(Mat& img, RotatedRect& rotatedRect, Point2f center[4], int topLeftOrder, int buttonRightOrder)
 {
-	Mat warpPerspective_mat(3, 3, CV_32FC1);
+	///Mat warpPerspective_mat(3, 3, CV_32FC1);
 	Mat warp256mat(3, 3, CV_32FC1);
-	Mat warpRectMat(3, 3, CV_32FC1);
+	//Mat warpRectMat(3, 3, CV_32FC1);
 
-	Mat warpPerspective_dst = Mat::zeros(rotatedRect.size.width, rotatedRect.size.height, img.type());
-	Mat warpRectdst = Mat::zeros(rotatedRect.size.width, rotatedRect.size.height, img.type());
+	//Mat warpPerspective_dst = Mat::zeros(rotatedRect.size.width, rotatedRect.size.height, img.type());
+	//Mat warpRectdst = Mat::zeros(rotatedRect.size.width, rotatedRect.size.height, img.type());
 	Mat warp256 = Mat::zeros(256, 256, img.type());
 	Point2f srcPoint[4], topLeftCenter = center[topLeftOrder], buttonRightCenter = center[buttonRightOrder];
 	rotatedRect.points(srcPoint);
