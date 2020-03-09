@@ -15,18 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="encodeV1.1\encode.cpp">
+    <ClCompile Include="encode\encode.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="encodeV1.1\Encoder.cpp">
+    <ClCompile Include="encode\Encoder.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="encodeV1.1\definition.h">
+    <ClInclude Include="encode\definition.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="encodeV1.1\Encoder.h">
+    <ClInclude Include="encode\Encoder.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

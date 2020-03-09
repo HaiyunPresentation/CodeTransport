@@ -19,12 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="encodeV1.1\encode.cpp" />
-    <ClCompile Include="encodeV1.1\Encoder.cpp" />
+    <ClCompile Include="encode\encode.cpp" />
+    <ClCompile Include="encode\Encoder.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="encodeV1.1\definition.h" />
-    <ClInclude Include="encodeV1.1\Encoder.h" />
+    <ClInclude Include="encode\definition.h" />
+    <ClInclude Include="encode\Encoder.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
