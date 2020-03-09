@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     // if in Windows, write frames into this
     #ifdef _WIN64
 	cv::VideoWriter WinVideo;
-	WinVideo.open("Video.avi",cv::VideoWriter::fourcc('A', 'V', 'C', '1'), VIDEO_FPS, cv::Size(512,512), false);
+	WinVideo.open("Video.avi",cv::VideoWriter::fourcc('A', 'V', 'C', '1'), VIDEO_FPS, cv::Size(OUT_FRAME_SIZE, OUT_FRAME_SIZE), false);
     #endif
 
     Encoder coder;

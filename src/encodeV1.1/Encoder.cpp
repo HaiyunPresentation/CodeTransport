@@ -1,9 +1,9 @@
 #include "Encoder.h"
 
 Encoder::Encoder():
-  codeMatTop(ANCHOR_SIZE, CODEMAT_T_SIZE, CV_8UC1),
-  codeMatMid(CODEMAT_T_SIZE, CODEMAT_M_SIZE, CV_8UC1),
-  codeMatBot(ANCHOR_SIZE, CODEMAT_T_SIZE, CV_8UC1),
+  codeMatTop(CODEMAT_ANCHOR_SIZE, CODEMAT_TOPBOT_SIZE, CV_8UC1),
+  codeMatMiddle(CODEMAT_TOPBOT_SIZE, CODEMAT_MIDDLE_SIZE, CV_8UC1),
+  codeMatBottom(CODEMAT_ANCHOR_SIZE, CODEMAT_TOPBOT_SIZE, CV_8UC1),
   baseAnchor(cv::Mat::zeros(BASE_ANCHOR_SIZE, BASE_ANCHOR_SIZE, CV_8UC1)),
   outSize(cv::Size(OUT_FRAME_SIZE, OUT_FRAME_SIZE)){
     this->writeByte = 0;
@@ -54,11 +54,11 @@ void Encoder::addByte(byte data, bool isEOF){
         isMaskBlack = (this->writeByte / 3U) % 2;
     }
     else if (this->writeByte < CUMU_BYTE_MID){
-        pos = this->codeMatMid.data + 8 * (this->writeByte - CUMU_BYTE_TOP);
+        pos = this->codeMatMiddle.data + 8 * (this->writeByte - CUMU_BYTE_TOP);
         isMaskBlack = ((this->writeByte - CUMU_BYTE_TOP) / 4U) % 2;
     }
     else if (this->writeByte < CUMU_BYTE_BOT){
-        pos = this->codeMatBot.data + 8 * (this->writeByte - CUMU_BYTE_MID);
+        pos = this->codeMatBottom.data + 8 * (this->writeByte - CUMU_BYTE_MID);
         isMaskBlack = ((this->writeByte - CUMU_BYTE_MID) / 3U) % 2;
     }
     else{
@@ -76,15 +76,15 @@ void Encoder::addByte(byte data, bool isEOF){
 }
 
 void Encoder::outFrame(cv::Mat& out){
-    cv::Mat anchorMat(ANCHOR_SIZE, ANCHOR_SIZE, CV_8UC1, cv::Scalar(WHITE_PIX));
+    cv::Mat anchorMat(CODEMAT_ANCHOR_SIZE, CODEMAT_ANCHOR_SIZE, CV_8UC1, cv::Scalar(WHITE_PIX));
                             // a white part to make up the part of Anchor
     cv::Mat QRcode;         // concat the anchorMat * 4 with the codeMat
     cv::Mat tmpMat;         // temp
     
     cv::hconcat(anchorMat, this->codeMatTop, tmpMat);
     cv::hconcat(tmpMat, anchorMat, out);                // topMat into QR code(save in out)
-    cv::vconcat(out, this->codeMatMid, out);            // midMat into QR code
-    cv::hconcat(anchorMat, this->codeMatBot, tmpMat);
+    cv::vconcat(out, this->codeMatMiddle, out);            // midMat into QR code
+    cv::hconcat(anchorMat, this->codeMatBottom, tmpMat);
     cv::hconcat(tmpMat, anchorMat, tmpMat);
     cv::vconcat(out, tmpMat, out);                      // botMat into QR code
             // QR code is now done(save in out)
