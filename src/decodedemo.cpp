@@ -1,9 +1,12 @@
 #include "decode.h"
 #include "Detector.h"
 
-#define BLOCK_ROWS 32
-#define BLOCK_BITS 1024
-#define OUTPUT_FPS 5
+#define BLOCK_ROWS 64
+#define BLOCK_BITS (BLOCK_ROWS*BLOCK_ROWS)
+#define PIXEL_ROWS 256
+#define ANCHOR_SIZE 32
+#define OUTPUT_FPS 6
+#define VERSION "200310"
 
 using namespace std;
 using namespace cv;
@@ -19,39 +22,42 @@ int Decode(Mat img, bool& end, int order)
 	if (!detector.GetCropCode(img, resizeImg))
 	{
 		cout << "Can't detect " << order << endl;
-		imwrite("v0302" + to_string(order) + ".jpg", img);
+		imwrite("VERSION" + to_string(order) + "F.jpg", img);
 		return -1;
 	}
 	cout << "Detect " << order << endl;
 	//imshow("",resizeImg);
 	//waitKey(0);
-	imwrite("v0302OK" + to_string(order) + ".jpg", resizeImg);
+	imwrite(VERSION + to_string(order) + ".jpg", resizeImg);
 	Mat circleImg;
 	cvtColor(resizeImg, circleImg, COLOR_GRAY2BGR);
 	int total_bit = 0;
-	while (total_bit < 1020)
+	while (total_bit < BLOCK_BITS-8)
 	{
 		unsigned char chr = '\0';
 		for (int k = 0; k < 8; k++)
 		{
-			while ((total_bit / 32 < 4 || total_bit / 32 >= 28) && (total_bit % 32 < 4 || total_bit % 32 >= 28))
+			while ((total_bit / BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)
+				|| total_bit / BLOCK_ROWS >= BLOCK_ROWS - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS))
+				&& (total_bit % BLOCK_ROWS >= BLOCK_ROWS - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)
+					|| total_bit % BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)))
 			{
 				total_bit++;
 			}
 
 			int val = //(*(resizeImg.data + resizeImg.step[0] * (16 * (total_bit / 16) + 5) + resizeImg.step[1] * (16 * (total_bit % 16) + 5))
 				//+ *(resizeImg.data + resizeImg.step[0] * (16 * (total_bit / 16) + 5) + resizeImg.step[1] * (16 * (total_bit % 16) + 9))
-				+*(resizeImg.data + resizeImg.step[0] * (8 * (total_bit / BLOCK_ROWS) + 4) + resizeImg.step[1] * (8 * (total_bit % BLOCK_ROWS) + 4))
+				+*(resizeImg.data + resizeImg.step[0] * (PIXEL_ROWS/BLOCK_ROWS * (total_bit / BLOCK_ROWS) + 2) + resizeImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (total_bit % BLOCK_ROWS) + 2))
 				//+ *(resizeImg.data + resizeImg.step[0] * (16 * (total_bit / 16) + 9) + resizeImg.step[1] * (16 * (total_bit % 16) + 5))
 				//+* (resizeImg.data + resizeImg.step[0] * (16 * (total_bit / 16) + 9) + resizeImg.step[1] * (16 * (total_bit % 16) + 9)))
 				//5;
 				;
-			circle(circleImg, Point(8 * (total_bit % BLOCK_ROWS) + 4, 8 * (total_bit / BLOCK_ROWS) + 4), 2, Scalar(255, 0, 0), -1);
+			circle(circleImg, Point(PIXEL_ROWS / BLOCK_ROWS * (total_bit % BLOCK_ROWS) + 2, PIXEL_ROWS / BLOCK_ROWS * (total_bit / BLOCK_ROWS) + 2), 2, Scalar(255, 0, 0), -1);
 			
 			//int val = *(code.data + code.step[0] * (total_bit / 16) + code.step[1] * (total_bit % 16));
 			chr = chr << 1;
-			if (val < 128 && (!(total_bit % 2) && !((total_bit / 32) % 2) || (total_bit % 2) && ((total_bit / 32) % 2))
-				|| val >= 128 && !(!(total_bit % 2) && !((total_bit / 32) % 2) || (total_bit % 2) && ((total_bit / 32) % 2)))
+			if (val < 128 && (!(total_bit % 2) && !((total_bit / BLOCK_ROWS) % 2) || (total_bit % 2) && ((total_bit / BLOCK_ROWS) % 2))
+				|| val >= 128 && !(!(total_bit % 2) && !((total_bit / BLOCK_ROWS) % 2) || (total_bit % 2) && ((total_bit / BLOCK_ROWS) % 2)))
 			{
 
 				chr = chr | 1;
@@ -120,7 +126,7 @@ int NaiveCodeVideoCapture()
 
 int main()
 {
-
+	Detector detector;
 	NaiveCodeVideoCapture();
 	//Mat img = imread("op12D.jpg");
 	//Mat img = imread("op22.jpg");
@@ -133,11 +139,11 @@ int main()
 	//cout << QRCodeDetect::GetCropCode(img, dst);
 	//cout << CodeDetect::GetCropCode(img,dst);
 	Mat img;
-	int ord = 1;
+	int ord = 0;
 	for (;ord<=4; ord++)
 	{
-		//img= imread(".\\test"+to_string(ord)+".jpg");
-		img = imread(".\\T" + to_string(ord) +".jpg");
+		img= imread(".\\test"+to_string(ord)+".jpg");
+		//img = imread(".\\T" + to_string(ord) +".jpg");
 		if (img.empty())
 		{
 			cout << "Null";
@@ -146,15 +152,15 @@ int main()
 		else
 		{
 			bool end = false;
-			cout << ord << " : " << CodeDetect::GetCropCode(img,dst)<<" ";
+			cout << ord << " : " << detector.GetCropCode(img,dst)<<" ";
 
-		//Decode(img, end,ord);
+		Decode(img, end,ord);
 
 		}
 		cout << endl;
 
 	}
-	//*/
+	*/
 	cout << endl << "Done" << endl;
 
 	return 0;

@@ -37,7 +37,7 @@ void Encoder::setOutSize(size_t size_row=OUT_FRAME_SIZE, size_t size_col=OUT_FRA
 
 void Encoder::addByte(byte data, bool isEOF){
     if (isEOF){
-        // EndFrame: add '0000 0000' until 120B in this frame
+        // EndFrame: add '0000 0000' until CUMU_BYTE_BOT Bytes in this frame
         while(this->writeByte < CUMU_BYTE_BOT){
             this->addByte(0x00, false);
         }

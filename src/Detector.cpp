@@ -295,11 +295,11 @@ Mat Detector::Crop4AnchorCode(Mat& img, RotatedRect& rotatedRect, Point2f center
 	srcTri.push_back(center[buttonRightOrder]);
 	srcTri.push_back(center[buttonLeftOrder]);
 
-	vector<Point2f> dstTri;
+	/*vector<Point2f> dstTri;
 	dstTri.push_back(Point2f(rotatedRect.size.width * 13.5 / 256, rotatedRect.size.height * 13.5 / 256));
 	dstTri.push_back(Point2f(rotatedRect.size.width * 241.5 / 256, rotatedRect.size.height * 13.5 / 256));
 	dstTri.push_back(Point2f(rotatedRect.size.width * 248.5 / 256, rotatedRect.size.height * 248.5 / 256));
-	dstTri.push_back(Point2f(rotatedRect.size.width * 13.5 / 256, rotatedRect.size.height * 241.5 / 256));
+	dstTri.push_back(Point2f(rotatedRect.size.width * 13.5 / 256, rotatedRect.size.height * 241.5 / 256));*/
 
 	vector<Point2f> dst256Tri;
 	dst256Tri.push_back(Point2f(13.5, 13.5));
@@ -307,7 +307,7 @@ Mat Detector::Crop4AnchorCode(Mat& img, RotatedRect& rotatedRect, Point2f center
 	dst256Tri.push_back(Point2f(248.5, 248.5));
 	dst256Tri.push_back(Point2f(13.5, 241.5));
 
-	vector<Point2f> srcTriRect;
+	/*vector<Point2f> srcTriRect;
 	srcTriRect.push_back(srcPoint[topLeftRectOrder]);
 	srcTriRect.push_back(srcPoint[(topLeftRectOrder + 1) % 4]);
 	srcTriRect.push_back(srcPoint[(topLeftRectOrder + 2) % 4]);
@@ -317,22 +317,22 @@ Mat Detector::Crop4AnchorCode(Mat& img, RotatedRect& rotatedRect, Point2f center
 	dstTriRect.push_back(Point2f(0, 0));
 	dstTriRect.push_back(Point2f(rotatedRect.size.width - 1, 0));
 	dstTriRect.push_back(Point2f(rotatedRect.size.width - 1, rotatedRect.size.height - 1));
-	dstTriRect.push_back(Point2f(0, rotatedRect.size.height - 1));
+	dstTriRect.push_back(Point2f(0, rotatedRect.size.height - 1));*/
 
 
-	warpPerspective_mat = getPerspectiveTransform(srcTri, dstTri);
-	warpPerspective(img, warpPerspective_dst, warpPerspective_mat, warpPerspective_dst.size());
-	resize(warpPerspective_dst, warpPerspective_dst, Size(256, 256));
+	//warpPerspective_mat = getPerspectiveTransform(srcTri, dstTri);
+	//warpPerspective(img, warpPerspective_dst, warpPerspective_mat, warpPerspective_dst.size());
+	//resize(warpPerspective_dst, warpPerspective_dst, Size(256, 256));
 
-	warpRectMat = getPerspectiveTransform(srcTriRect, dstTriRect);
-	warpPerspective(img, warpRectdst, warpRectMat, warpRectdst.size());
-	resize(warpRectdst, warpRectdst, Size(256, 256));
+	//warpRectMat = getPerspectiveTransform(srcTriRect, dstTriRect);
+	//warpPerspective(img, warpRectdst, warpRectMat, warpRectdst.size());
+	//resize(warpRectdst, warpRectdst, Size(256, 256));
 
 	warp256mat = getPerspectiveTransform(srcTri, dst256Tri);
 	warpPerspective(img, warp256, warp256mat, warp256.size());
-	cv::imshow("warp", warpPerspective_dst);
-	cv::imshow("rect", warpRectdst);
-	cv::imshow("warp256", warp256);
+	//cv::imshow("warp", warpPerspective_dst);
+	//cv::imshow("rect", warpRectdst);
+	//cv::imshow("warp256", warp256);
 	waitKey(0);
 
 	return warp256;

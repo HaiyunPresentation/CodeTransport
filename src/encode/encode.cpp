@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
         
         cv::Mat out;
         coder.outFrame(out);
+		imshow("out", out);
+		cv::waitKey(0);
         FrameConter++;
         #ifdef  __linux__
             cv::imwrite("output/Frame" + std::to_string(FrameConter) + ".jpg", out);
