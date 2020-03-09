@@ -1,5 +1,5 @@
-#define CODEMAT_ANCHOR_SIZE 4
-#define CODEMAT_MIDDLE_SIZE 32
+#define CODEMAT_ANCHOR_SIZE 8
+#define CODEMAT_MIDDLE_SIZE 64
 #define CODEMAT_TOPBOT_SIZE (CODEMAT_MIDDLE_SIZE-2*CODEMAT_ANCHOR_SIZE)
 #define BASE_ANCHOR_SIZE    7
 #define PIXEL_SIZE          512
@@ -10,13 +10,13 @@
 #define BIG_ANCHOR_SIZE     (BASE_ANCHOR_SIZE*BIG_ANCHOR_RATE)
 #define SML_ANCHOR_SIZE     (BASE_ANCHOR_SIZE*SML_ANCHOR_RATE)
 
-#define CUMU_BYTE_TOP       12
-#define CUMU_BYTE_MID       108
-#define CUMU_BYTE_BOT       120
+#define CUMU_BYTE_TOP       48
+#define CUMU_BYTE_MID       432
+#define CUMU_BYTE_BOT       480
 
 #define BLACK_PIX           0
 #define WHITE_PIX           255
 
-#define VIDEO_FPS           5
+#define VIDEO_FPS           6
 
 typedef unsigned char byte;
