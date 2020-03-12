@@ -7,41 +7,44 @@
 
 class Detector
 {
+	//cv::Mat srcImage;
+	//cv::Mat cropImage;
 
-public:
-	//An approximate range
+	// An approximate range
 	bool IsQRRate(float rate);
 
-	//Judge the color ratio of X-direction
-	bool IsQRColorRateX(cv::Mat& image, int flag);
+	// Judge the color ratio of X-direction
+	bool IsQRColorRateX(cv::Mat& img, int flag);
 
-	//Judge the color ratio of Y-direction
-	bool IsQRColorRateY(cv::Mat& image, int flag);
+	// Judge the color ratio of Y-direction
+	bool IsQRColorRateY(cv::Mat& img, int flag);
 
-	bool IsQRColorRate(cv::Mat& image, int flag);
+	bool IsQRColorRate(cv::Mat& img, int flag);
 
-	bool IsAnchor(std::vector<cv::Point>& contour, cv::Mat& img, int i);
-
-	int FindAnchors(cv::Mat& srcImg, std::vector<std::vector<cv::Point>>& qrPoint);
-
-	cv::Mat CropImage(cv::Mat& img, cv::RotatedRect& rotatedRect);
-
+	// Get the center vector of four anchors
 	int CenterPoint(std::vector<cv::Point>& anchor, cv::Point2f& p);
-
+	
+	// Judge the top-left one from three large anchors
 	int JudgeTopLeft(cv::Point2f* center);
- 
-	bool IsCode(cv::Mat& srcImg);
-	bool IsCode(cv::Mat& srcImg, int newOrder);
+
+public:
 
 	bool GetCropCode(cv::Mat& srcImg, std::vector<cv::Mat>& dst);
 
-	//cv::Mat Crop3AnchorCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f topLeft);
+	int FindAnchors(cv::Mat& srcImg, std::vector<std::vector<cv::Point>>& qrPoint);
 
-	cv::Mat Crop4AnchorCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f center[4], int topLeftOrder, int buttonRightOrder);
+	bool IsAnchor(std::vector<cv::Point>& contour, cv::Mat& img, int i);
 
-	//cv::Mat resize3AnchorCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
+	cv::Mat CropRect(cv::Mat& img, cv::RotatedRect& rotatedRect);
 
-	std::vector<cv::Mat> resize4AnchorCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
+	cv::Mat CropCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f center[4], int topLeftOrder, int buttonRightOrder);
+
+	std::vector<cv::Mat> ResizeCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
+ 
+	bool IsCode(cv::Mat& srcImg);
+
+	bool IsCode(cv::Mat& srcImg, int newOrder);
+
 
 
 };
