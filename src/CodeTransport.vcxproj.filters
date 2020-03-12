@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="encodedemo.cpp">
+    <ClCompile Include="encodecolor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

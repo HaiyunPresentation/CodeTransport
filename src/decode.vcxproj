@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="decodecolor.cpp" />
     <ClCompile Include="Detector.cpp" />
-    <ClCompile Include="decodedemo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Detector.h" />

@@ -288,7 +288,7 @@ Mat Detector::Crop4AnchorCode(Mat& img, RotatedRect& rotatedRect, Point2f center
 		}
 	}
 	int buttonLeftOrder = 6 - buttonRightOrder - topLeftOrder - topRightOrder;
-	cout << buttonLeftOrder << buttonRightOrder << topLeftOrder << topRightOrder;
+	//cout << buttonLeftOrder << buttonRightOrder << topLeftOrder << topRightOrder;
 	vector<Point2f> srcTri;
 	srcTri.push_back(center[topLeftOrder]);
 	srcTri.push_back(center[topRightOrder]);
@@ -338,69 +338,6 @@ Mat Detector::Crop4AnchorCode(Mat& img, RotatedRect& rotatedRect, Point2f center
 	return warp256;
 }
 
-//This function suites 3-anchor code.
-Mat Detector::Crop3AnchorCode(Mat& img, RotatedRect& rotatedRect, Point2f topLeft)
-{
-	Mat warpPerspective_mat(3, 3, CV_32FC1);
-
-	Mat warpPerspective_dst = Mat::zeros(rotatedRect.size.width, rotatedRect.size.height, img.type());
-	Point2f srcPoint[4];
-	rotatedRect.points(srcPoint);
-	Mat img2 = img.clone();
-	circle(img2, srcPoint[0], 10, Scalar(255, 0, 0));
-	circle(img2, srcPoint[1], 10, Scalar(0, 255, 0));
-	circle(img2, srcPoint[2], 10, Scalar(0, 0, 255));
-	circle(img2, srcPoint[3], 10, Scalar(255, 0, 255));
-	circle(img2, topLeft, 20, Scalar(255));
-	resize(img2, img2, Size(img2.cols / 2, img2.rows / 2));
-	cv::imshow("circle", img2);
-	waitKey(0);
-	int topLeftRectOrder = 0, buttonRightRectOrder = 0;
-	double minDistance = ((double)srcPoint[0].x - topLeft.x) * ((double)srcPoint[0].x - topLeft.x)
-		+ ((double)srcPoint[0].y - topLeft.y) * ((double)srcPoint[0].y - topLeft.y),
-		maxDistance = minDistance;
-	for (int i = 1; i < 4; i++)
-	{
-		double distance = ((double)srcPoint[i].x - topLeft.x) * ((double)srcPoint[i].x - topLeft.x)
-			+ ((double)srcPoint[i].y - topLeft.y) * ((double)srcPoint[i].y - topLeft.y);
-		if (distance > maxDistance)
-		{
-			maxDistance = distance;
-			buttonRightRectOrder = i;
-		}
-		else if (distance < minDistance)
-		{
-			minDistance = distance;
-			topLeftRectOrder = i;
-		}
-	}
-	if (topLeftRectOrder - buttonRightRectOrder != 2 && topLeftRectOrder - buttonRightRectOrder != -2)
-	{
-		cout << "Order Judgement Error in CropCode()!" << endl;
-		return img2;
-	}
-
-	vector<Point2f> srcTri;
-	srcTri.push_back(srcPoint[topLeftRectOrder]);
-	srcTri.push_back(srcPoint[(topLeftRectOrder + 1) % 4]);
-	srcTri.push_back(srcPoint[(topLeftRectOrder + 2) % 4]);
-	srcTri.push_back(srcPoint[(topLeftRectOrder + 3) % 4]);
-
-	vector<Point2f> dstTri;
-	dstTri.push_back(Point2f(0, 0));
-	dstTri.push_back(Point2f(rotatedRect.size.width - 1, 0));
-	dstTri.push_back(Point2f(rotatedRect.size.width - 1, rotatedRect.size.height - 1));
-	dstTri.push_back(Point2f(0, rotatedRect.size.height - 1));
-
-	warpPerspective_mat = getPerspectiveTransform(srcTri, dstTri);
-	warpPerspective(img, warpPerspective_dst, warpPerspective_mat, warpPerspective_dst.size());
-	//cv::imshow("", warpPerspective_dst);
-	//waitKey(0);
-
-	return warpPerspective_dst;
-}
-
-
 bool Detector::IsAnchor(vector<Point>& contour, Mat& img, int i)
 {
 	//Limit the minimum size
@@ -425,18 +362,19 @@ int Detector::FindAnchors(Mat& srcImg, vector<vector<Point>>& qrPoint)
 	//namedWindow("src_gray");
 	//cv::imshow("src_gray", src_gray);
 
-	Mat canny_output;
+	/*Mat canny_output;
 	Canny(src_gray, canny_output, 0, 255);
 	Mat canny_output_copy = canny_output.clone();
-	//cv::imshow("Canny_output", canny_output);
-	//waitKey(0);
+	cv::imshow("Canny_output", canny_output);
+	//waitKey(0);*/
 
 	//Binarization
 	Mat threshold_output;
-	threshold(src_gray, threshold_output, 0, 255, THRESH_BINARY | THRESH_OTSU);
+	threshold(src_gray, threshold_output, 100, 255, THRESH_BINARY | THRESH_OTSU);
 	Mat threshold_output_copy = threshold_output.clone();
 	//namedWindow("Threshold_output");
 	//cv::imshow("Threshold_output", threshold_output);
+	//waitKey(0);
 
 	//Search the contour
 	vector<vector<Point> > contours;
@@ -455,27 +393,13 @@ int Detector::FindAnchors(Mat& srcImg, vector<vector<Point>>& qrPoint)
 	for (int i = 0; i < contours.size(); i++)
 	{
 		//cout << hierarchy[i][2] << " ";
-		if (hierarchy[i][2] != -1)
-		{
-			if (ic == 0) parentIndex = i;
-			ic++;
-		}
-		else if (hierarchy[i][2] == -1)
-		{
-			ic = 0;
-			parentIndex = -1;
-		}
-		if (parentIndex != -1)
-		{
-			bool isQR = IsAnchor(contours[parentIndex], threshold_output_copy, parentIndex);
-
-			//Save three anchors
-			if (isQR)
-				qrPoint.push_back(contours[parentIndex]);
-
-			ic = 0;
-			parentIndex = -1;
-		}
+		int child = hierarchy[i][2];
+		if (child == -1) continue;
+		int grandchild = hierarchy[child][2];
+		if (grandchild == -1) continue;
+		bool isQR = IsAnchor(contours[i], threshold_output_copy, i);
+		if (isQR)
+			qrPoint.push_back(contours[i]);
 	}
 
 	return 0;
@@ -494,41 +418,7 @@ int Detector::CenterPoint(vector<Point>& anchor, Point2f& p)
 	return 0;
 }
 
-//This function suites 3-anchor code.
-Mat Detector::resize3AnchorCode(Mat& img, vector<vector<Point>>& qrPoint)
-{
-	vector<Point2f> totalPoints;
-	Point2f center[3];
-	Mat img2 = img.clone();
-	for (int i = 0; i < qrPoint.size(); i++)
-	{
-		CenterPoint(qrPoint[i], center[i]);
-		circle(img2, center[i], 1, Scalar(0, 0, 255));
-		for (int j = 0; j < qrPoint[i].size(); j++)
-		{
-			circle(img2, qrPoint[i][j], 1, Scalar(255));
-			totalPoints.push_back(qrPoint[i][j]);
-		}
-	}
-
-	//cv::imshow("img2", img2);
-	//waitKey();
-	int topLeftRectOrder = JudgeTopLeft(center);
-	RotatedRect rect = minAreaRect(totalPoints);
-	Mat cropImg = Crop3AnchorCode(img, rect, center[topLeftRectOrder]);//ImproveCrop3AnchorCode(img, rect, center, topLeftRectOrder); //Crop3AnchorCode(img, rect, center[topLeftRectOrder]);
-	//Decode(img,end);
-	Mat threshold_output;
-	cvtColor(cropImg, threshold_output, COLOR_BGR2GRAY);
-	//cv::imshow("crop", cropImg);
-	//waitKey();
-	threshold(threshold_output, threshold_output, 0, 255, THRESH_BINARY | THRESH_OTSU);
-	resize(threshold_output, threshold_output, Size2i(256, 256));
-	cv::imshow("thres", threshold_output);
-	waitKey();
-	return threshold_output;
-}
-
-Mat Detector::resize4AnchorCode(Mat& img, vector<vector<Point>>& qrPoint)
+vector<cv::Mat> Detector::resize4AnchorCode(Mat& img, vector<vector<Point>>& qrPoint)
 {
 	vector<Point2f> totalPoints;
 	Point2f center[4], center3[3];
@@ -551,8 +441,7 @@ Mat Detector::resize4AnchorCode(Mat& img, vector<vector<Point>>& qrPoint)
 		}
 	}
 
-	//cv::imshow("img2",img2);
-	//waitKey();
+
 	for (int i = 0, j = 0; i < 4; i++)
 	{
 		if (i == buttonRightOrder) continue;
@@ -562,61 +451,110 @@ Mat Detector::resize4AnchorCode(Mat& img, vector<vector<Point>>& qrPoint)
 	int topLeftOrder = JudgeTopLeft(center3);
 	if (topLeftOrder >= buttonRightOrder) topLeftOrder++;
 
-	Mat img2 = img.clone();
-	circle(img2, center[topLeftOrder], 10, Scalar(255, 0, 0));
-	circle(img2, center[buttonRightOrder], 10, Scalar(0, 255, 0));
-	//circle(img2, center[2], 10, Scalar(0, 0, 255));
-	//circle(img2, center[3], 10, Scalar(255, 0, 255));
-	resize(img2, img2, Size(img2.cols / 2, img2.rows / 2));
-	//cv::imshow("circle", img2);
-	//waitKey(0);
-
-
 	RotatedRect rect = minAreaRect(totalPoints);
 	Mat cropImg = Crop4AnchorCode(img, rect, center, topLeftOrder, buttonRightOrder);
 	//Decode(img,end);
-	Mat threshold_output;
-	cvtColor(cropImg, threshold_output, COLOR_BGR2GRAY);
+	
 	//cv::imshow("crop", cropImg);
 	//waitKey();
-	threshold(threshold_output, threshold_output, 0, 255, THRESH_BINARY | THRESH_OTSU);
-	resize(threshold_output, threshold_output, Size2i(256, 256));
-	//cv::imshow("thres", threshold_output);
+
+	Mat bgrOutput[3];
+	split(cropImg, bgrOutput);
+
+	//cv::imshow("b", bgrOutput[0]);	
+	//cv::imshow("g", bgrOutput[1]);	
+	//cv::imshow("r", bgrOutput[2]);
 	//waitKey();
-	return threshold_output;
+
+
+	std::vector<cv::Mat> resBGR;
+	for (int i = 0; i < 3; i++)
+	{
+		//Mat threshold_output;
+		//cvtColor(bgrOutput[i], threshold_output, COLOR_BGR2GRAY);
+
+
+		threshold(bgrOutput[i], bgrOutput[i], 0, 255, THRESH_BINARY | THRESH_OTSU);
+		resize(bgrOutput[i], bgrOutput[i], Size2i(256, 256));
+		//cv::imshow("thres"+std::to_string(i), bgrOutput[i]);
+		//waitKey();
+		resBGR.push_back(bgrOutput[i]);
+	}
+	resBGR.push_back(cropImg);
+
+	return resBGR;
 	//return img;
 }
 bool Detector::IsCode(Mat& srcImg)
 {
 	vector<vector<Point>> qrPoint;
 	FindAnchors(srcImg, qrPoint);
+	std::cout << "qrPoint.size()==" << qrPoint.size() << std::endl;
+
 	return (qrPoint.size() == 4);
 }
 
-bool Detector::GetCropCode(Mat& srcImg, Mat& dst)
+bool Detector::IsCode(Mat& srcImg,int newOrder)
 {
 	vector<vector<Point>> qrPoint;
 	FindAnchors(srcImg, qrPoint);
-	//for (int i = 0; i < qrPoint.size(); i++)
-	//{
-	//	for (int j = 0; j < qrPoint[i].size(); j++)
-	//	{
-	//		circle(srcImg, qrPoint[i][j], 1, Scalar(255));
-	//	}
-	//}
-	//resize(srcImg, srcImg, Size(srcImg.cols / 2, srcImg.rows / 2));
-	//cv::imshow("src", srcImg);
-	//waitKey();
+	std::cout << "qrPoint.size()==" << qrPoint.size() << std::endl;
+	if (qrPoint.size() <4 && qrPoint.size() >0)
+	{
+		Mat src_gray;
+		cvtColor(srcImg, src_gray, COLOR_BGR2GRAY);
+		Mat threshold_output;
+		threshold(src_gray, threshold_output, 0, 255, THRESH_BINARY | THRESH_OTSU);
+		imwrite("u" + to_string(newOrder) + "th.jpg", threshold_output);
+		Point2f center[4];
+
+		for (int i = 0; i < qrPoint.size(); i++)
+		{
+
+			CenterPoint(qrPoint[i], center[i]);
+			circle(srcImg, center[i], 10, Scalar(0,0,255));
+		}
+		imshow("",srcImg);
+		imwrite("undectcted" + to_string(newOrder) + ".jpg", srcImg);
+		waitKey(0);
+
+	}
+	//else imwrite("uu" + to_string(newOrder) + ".jpg", srcImg);
+	return (qrPoint.size() == 4);
+}
+
+bool Detector::GetCropCode(Mat& srcImg, std::vector<cv::Mat>& dst)
+{
+	vector<vector<Point>> qrPoint;
+	FindAnchors(srcImg, qrPoint);
+
 	if (qrPoint.size() == 4)
 	{
 		dst = resize4AnchorCode(srcImg, qrPoint);
 		return true;
 	}
-	else if (qrPoint.size() == 3)
-	{
-		dst = resize3AnchorCode(srcImg, qrPoint);
-		return true;
-	}
+
 	else
+	{
+/*		Mat src_gray;
+		cvtColor(srcImg, src_gray, COLOR_BGR2GRAY);
+		Mat threshold_output;
+		threshold(src_gray, threshold_output, 0, 255, THRESH_BINARY | THRESH_OTSU);
+		//imwrite("u" + to_string(newOrder) + "th.jpg", threshold_output);
+		Point2f center[4];
+
+		for (int i = 0; i < qrPoint.size(); i++)
+		{
+
+			CenterPoint(qrPoint[i], center[i]);
+			circle(srcImg, center[i], 10, Scalar(0, 0, 255));
+		}
+		imshow("", srcImg);
+		imwrite("undectcted" + to_string(newOrder) + ".jpg", srcImg);
+		//waitKey(0);*/
+
+		std::cout << "qrPoint.size()==" << qrPoint.size()<<std::endl;
 		return false;
+	}
+
 }

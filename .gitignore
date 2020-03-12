@@ -2,3 +2,8 @@ test
 .vs
 x64
 *.avi
+/src/*.jpg
+*.mp4
+*.jpg
+*.bin
+/src/*.bin

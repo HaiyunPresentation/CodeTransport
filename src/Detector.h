@@ -31,16 +31,17 @@ public:
 	int JudgeTopLeft(cv::Point2f* center);
  
 	bool IsCode(cv::Mat& srcImg);
+	bool IsCode(cv::Mat& srcImg, int newOrder);
 
-	bool GetCropCode(cv::Mat& srcImg, cv::Mat& dst);
+	bool GetCropCode(cv::Mat& srcImg, std::vector<cv::Mat>& dst);
 
-	cv::Mat Crop3AnchorCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f topLeft);
+	//cv::Mat Crop3AnchorCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f topLeft);
 
 	cv::Mat Crop4AnchorCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f center[4], int topLeftOrder, int buttonRightOrder);
 
-	cv::Mat resize3AnchorCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
+	//cv::Mat resize3AnchorCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
 
-	cv::Mat resize4AnchorCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
+	std::vector<cv::Mat> resize4AnchorCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
 
 
 };
