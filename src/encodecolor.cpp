@@ -115,11 +115,11 @@ void AddEOFLocation(Mat& img, int flames, int totalBlocks)
 	{
 		if (rowOrder & judge)
 		{
-			DrawBlock(img, flameStep[flameRemainder][0] +i/4, flameStep[flameRemainder][1] + i%4, PIX_ONE_VALUE);
+			DrawBlock(img, flameStep[flameRemainder][0] + i / 4, flameStep[flameRemainder][1] + i % 4, PIX_ONE_VALUE);
 		}
 		if (colOrder & judge)
 		{
-			DrawBlock(img, flameStep[flameRemainder][0] +2+i/4, flameStep[flameRemainder][1] + i%4, PIX_ONE_VALUE);
+			DrawBlock(img, flameStep[flameRemainder][0] + 2 + i / 4, flameStep[flameRemainder][1] + i % 4, PIX_ONE_VALUE);
 		}
 		judge >>= 1;
 	}
@@ -127,7 +127,9 @@ void AddEOFLocation(Mat& img, int flames, int totalBlocks)
 
 int main()
 {
-	FILE* fp = fopen("in.bin", "r");
+	FILE* fp = fopen("in.bin", "rb");
+
+
 	VideoWriter writer;
 	writer.open("in.mp4", VideoWriter::fourcc('A', 'V', 'C', '1'), OUTPUT_FPS, Size(1200, 1200), true);
 	int flames = 0;
@@ -140,7 +142,6 @@ int main()
 			bgrImg[channel] = Mat(PIXEL_ROWS, PIXEL_ROWS, CV_8UC1, Scalar(255));
 			PrintBenchmark(bgrImg[channel]);
 			int totalBlocks = 0;
-			//while (totalBlocks <= BLOCK_SIZE)
 			while (totalBlocks < CUMU_END_BLOCKS)
 			{
 				unsigned char chr;
@@ -150,11 +151,14 @@ int main()
 					{
 						totalBlocks++;
 					}
-					
-					if(!exitSign) AddEOFLocation(bgrImg[channel], flames, totalBlocks);
-					exitSign = true;
+					if (!exitSign)
+					{
+						AddEOFLocation(bgrImg[channel], flames, totalBlocks);
+						exitSign = true;
+					}
 					chr = 255;
 				}
+
 				for (int k = 0; k < 8; k++)
 				{
 					while (NON_BLOCK_AREA(totalBlocks))

@@ -42,7 +42,7 @@ int isEnd(Mat& grayImg, int order, int& eofRow, int& eofCol)
 	{
 		return -1;
 	}
-	if (row == 0 || row >= BLOCK_ROWS)
+	if (row >= BLOCK_ROWS)
 	{
 		return -2;
 	}
@@ -62,7 +62,7 @@ int isEnd(Mat& grayImg, int order, int& eofRow, int& eofCol)
 	{
 		return -1;
 	}
-	if (col == 0 || col >= BLOCK_ROWS || (row < ANCHOR_ROWS || row >= BLOCK_ROWS - ANCHOR_ROWS) && (col < ANCHOR_ROWS || col >= BLOCK_ROWS - ANCHOR_ROWS))
+	if (col >= BLOCK_ROWS || (row < ANCHOR_ROWS || row >= BLOCK_ROWS - ANCHOR_ROWS) && (col < ANCHOR_ROWS || col >= BLOCK_ROWS - ANCHOR_ROWS))
 	{
 		return -2;
 	}
@@ -79,7 +79,7 @@ int judgeOrder(Mat& srcImg, int order)
 	threshold(grayImg, grayImg, 100, 255, THRESH_BINARY | THRESH_OTSU);
 	//imshow("", grayImg);
 	//waitKey();
-	int fix = 0,remainder=order%3;
+	int fix = 0, remainder = order % 3;
 	int val = 0;
 	//Mat img2 = grayImg.clone();
 	for (int i = 0; i < 16; i++)
@@ -94,12 +94,12 @@ int judgeOrder(Mat& srcImg, int order)
 	{
 		val += *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[remainder][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[remainder][1] + i % 4) + 2));
 	}
-	val/= 16;
+	val /= 16;
 	if (val < 128)	return 0;
 	val = 0;
 	for (int i = 0; i < 16; i++)
 	{
-		val += *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[(remainder+1)%3][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[(remainder + 1) % 3][1] + i % 4) + 2));
+		val += *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[(remainder + 1) % 3][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[(remainder + 1) % 3][1] + i % 4) + 2));
 	}
 	val /= 16;
 	if (val < 128)	return 1;
@@ -109,18 +109,18 @@ int judgeOrder(Mat& srcImg, int order)
 int Decode(Mat& img, bool& end, int& order)
 {
 
-	FILE* fp = fopen("out.bin", "a+");
+	FILE* fp = fopen("out.bin", "ab+");
 	vector<cv::Mat> resBGR;
 	if (!detector.GetCropCode(img, resBGR))
 	{
 		cout << "Can't detect " << order << endl;
-		imwrite(VERSION + to_string(order) + "F.jpg", img);
+		//imwrite(VERSION + to_string(order) + "F.jpg", img);
 		return -1;
 	}
 	int judge = judgeOrder(resBGR[3], order);
-	if (judge== -1)
+	if (judge == -1)
 	{
-		imwrite(VERSION + to_string(order) + "F.jpg", img);
+		//imwrite(VERSION + to_string(order) + "F.jpg", img);
 		return -1;
 	}
 	else if (judge == 1)
@@ -130,11 +130,13 @@ int Decode(Mat& img, bool& end, int& order)
 	}
 	cout << "Detect " << order << endl;
 	//for (int channel = 0; channel < 4; channel++)
-	imwrite(to_string(order) + "BGR" + to_string(3) + ".jpg", resBGR[3]);
+	//imwrite(to_string(order) + "BGR" + to_string(3) + ".jpg", resBGR[3]);
 	int eofRow = 0, eofCol = 0, eofConfindence = 0;
 	for (int channel = 0; channel < 3; channel++)
 	{
 		if (end) break;
+		int state = isEnd(resBGR[channel], order, eofRow, eofCol);
+		cout << order << " " << "State: " << state << endl;
 		int totalBlocks = 0;
 		while (totalBlocks < CUMU_END_BLOCKS)
 		{
@@ -164,37 +166,13 @@ int Decode(Mat& img, bool& end, int& order)
 				totalBlocks++;
 			}
 
-			cout << (int)chr << endl;
-			if (chr == 255 && eofConfindence != -1)
+			//cout << (int)chr << endl;
+			if (chr == 255)
 			{
-				if (eofConfindence == 0)
+				if (state == 0 && eofRow == (totalBlocks - 8) / BLOCK_ROWS && eofCol == (totalBlocks - 8) % BLOCK_ROWS)
 				{
-					int state = isEnd(resBGR[channel], order, eofRow, eofCol);
-					if (state == -1)
-					{
-						eofConfindence = -1;
-						continue;
-					}
-					if (state == 0 && eofRow == (totalBlocks - 8) / BLOCK_ROWS && eofCol == (totalBlocks - 8) % BLOCK_ROWS)
-					{
-						end = true;
-						break;
-					}
-					else
-					{
-						eofConfindence++;
-					}
-				}
-				else
-				{
-
-					if (eofConfindence == 3)
-					{
-						end = true;
-						break;
-					}
-					eofConfindence++;
-					continue;
+					end = true;
+					break;
 				}
 			}
 
@@ -234,15 +212,15 @@ int NaiveCodeVideoCapture()
 	while (true)
 	{
 
-		for (int i = 1; i < (30 / OUTPUT_FPS - 1) / 2; i++)
+		/*for (int i = 1; i < (30 / OUTPUT_FPS - 1) / 2; i++)
 		{
 			vc.read(srcImg);
 			if (!srcImg.data) break;
-		}
+		}*/
 
 		if (!srcImg.data) break;
 
-		//imwrite("op" + to_string(remainder) + ".jpg",srcImg);
+		//imwrite("op" + to_string(order) + ".jpg",srcImg);
 
 
 		if (Decode(srcImg, end, order) == -1)
@@ -266,8 +244,8 @@ int NaiveCodeVideoCapture()
 
 int main()
 {
-	//FILE* fp = fopen("out.bin", "w");
-	//fclose(fp);
+	FILE* fp = fopen("out.bin", "w");
+	fclose(fp);
 	Detector detector;
 	NaiveCodeVideoCapture();
 	/*Mat img = imread("x.jpg");
@@ -280,7 +258,7 @@ int main()
 	/*vector<cv::Mat> dstBGR;
 	Mat grayImg;
 	int ord = 0;
-	for (; ord <= 5; ord++)
+	for (; ord <= 8; ord++)
 	{
 		grayImg = imread(".\\test" + to_string(ord) + ".jpg");
 		if (grayImg.empty())
