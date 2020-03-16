@@ -15,24 +15,24 @@ bool Detector::GetCropCode(Mat& srcImg, vector<Mat>& dst)
 		dst = ResizeCode(srcImg, qrPoint);
 		return true;
 	}
-	cout << "qrPoint.size()==" << qrPoint.size() << " ";
+	//cout << "qrPoint.size()==" << qrPoint.size() << " ";
 	for (int i = 0; i < 3; i++)
 	{
 		qrPoint.clear();
 		FindAnchors(bgrChannel[i], qrPoint);
 		if (qrPoint.size() == 4)
 		{
-			cout << "qrPoint.size()==" << qrPoint.size() << endl;
+			//cout << "qrPoint.size()==" << qrPoint.size() << endl;
 			dst = ResizeCode(srcImg, qrPoint);
 			return true;
 		}
 		else
 		{
-			cout << ", " << qrPoint.size();
+			//cout << ", " << qrPoint.size();
 			qrPoint.clear();
 		}
 	}
-	cout << endl;
+	//cout << endl;
 	return false;
 
 }
@@ -461,39 +461,11 @@ vector<Mat> Detector::ResizeCode(Mat& img, vector<vector<Point>>& qrPoint)
 	//return img;
 }
 
-bool Detector::IsCode(Mat& srcImg)
-{
-	vector<vector<Point>> qrPoint;
-	FindAnchors(srcImg, qrPoint);
-	//cout << "qrPoint.size()==" << qrPoint.size() << endl;
-	if (qrPoint.size() != 4 && qrPoint.size() > 0)
-	{
-		Mat srcGray;
-		cvtColor(srcImg, srcGray, COLOR_BGR2GRAY);
-		Mat threshold_output;
-		threshold(srcGray, threshold_output, 100, 255, THRESH_BINARY | THRESH_OTSU);
-		//imwrite("u" + to_string(newOrder) + "th.jpg", threshold_output);
-		Point2f center[4];
-
-		for (int i = 0; i < qrPoint.size(); i++)
-		{
-
-			CenterPoint(qrPoint[i], center[i]);
-			circle(srcImg, center[i], 2, Scalar(0, 0, 255));
-		}
-		//imshow("", srcImg);
-		//imwrite("undectcted" + to_string(newOrder) + ".jpg", srcImg);
-		//waitKey(0);
-
-	}
-	return (qrPoint.size() == 4);
-}
-
 bool Detector::IsCode(Mat& srcImg, int newOrder)
 {
 	vector<vector<Point>> qrPoint;
 	FindAnchors(srcImg, qrPoint);
-	cout << "qrPoint.size()==" << qrPoint.size() << endl;
+	//cout << "qrPoint.size()==" << qrPoint.size();
 	if (qrPoint.size() !=4&&qrPoint.size()>0)
 	{
 		vector<vector<Point>> qrPoint;
@@ -505,35 +477,16 @@ bool Detector::IsCode(Mat& srcImg, int newOrder)
 			FindAnchors(bgrChannel[i], qrPoint);
 			if (qrPoint.size() == 4)
 			{
-				cout << "qrPoint.size()==" << qrPoint.size() << endl;
-				//dst = ResizeCode(srcImg, qrPoint);
+				//cout << "qrPoint.size()==" << qrPoint.size();
 				return true;
 			}
 			else
 			{
-				cout << ", " << qrPoint.size();
+				//cout << ", " << qrPoint.size();
 				qrPoint.clear();
 			}
 		}
-		cout << endl;
-		/*Mat srcGray;
-		cvtColor(srcImg, srcGray, COLOR_BGR2GRAY);
-		Mat threshold_output;
-		threshold(srcGray, threshold_output, 100, 255, THRESH_BINARY | THRESH_OTSU);
-		imwrite("u" + to_string(newOrder) + "th.jpg", threshold_output);
-		Point2f center[4];
-
-		for (int i = 0; i < qrPoint.size(); i++)
-		{
-
-			CenterPoint(qrPoint[i], center[i]);
-			circle(srcImg, center[i], 2, Scalar(0, 0, 255));
-		}*/
-		//imshow("", srcImg);
-		//imwrite("undectcted" + to_string(newOrder) + ".jpg", srcImg);
-		//waitKey(0);
-
 	}
-
+	//cout << endl;
 	return (qrPoint.size() == 4);
 }

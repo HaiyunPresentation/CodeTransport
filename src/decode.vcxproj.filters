@@ -18,7 +18,7 @@
     <ClCompile Include="Detector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="decodecolor.cpp">
+    <ClCompile Include="decode.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

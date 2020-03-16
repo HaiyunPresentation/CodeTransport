@@ -9,7 +9,7 @@
 #define CUMU_END_BLOCKS 4088
 
 #define OUTPUT_FPS 10
-#define VERSION "200312"
+#define VERSION "200316"
 
 
 using namespace std;
@@ -106,14 +106,14 @@ int judgeOrder(Mat& srcImg, int order)
 
 }
 
-int Decode(Mat& img, bool& end, int& order)
+int Decode(Mat& img, bool& end, int& order, char* outputPath)
 {
 
-	FILE* fp = fopen("out.bin", "ab+");
+	FILE* fp = fopen(outputPath, "ab+");
 	vector<cv::Mat> resBGR;
 	if (!detector.GetCropCode(img, resBGR))
 	{
-		cout << "Can't detect " << order << endl;
+		printf("Can't detect %d\n", order);
 		//imwrite(VERSION + to_string(order) + "F.jpg", img);
 		return -1;
 	}
@@ -125,10 +125,10 @@ int Decode(Mat& img, bool& end, int& order)
 	}
 	else if (judge == 1)
 	{
-		cout << "Miss a flame" << endl;
+		printf("Miss a flame\n");
 		order++;
 	}
-	cout << "Detect " << order << endl;
+	printf("Detect %d\n",order);
 	//for (int channel = 0; channel < 4; channel++)
 	//imwrite(to_string(order) + "BGR" + to_string(3) + ".jpg", resBGR[3]);
 	int eofRow = 0, eofCol = 0, eofConfindence = 0;
@@ -136,7 +136,7 @@ int Decode(Mat& img, bool& end, int& order)
 	{
 		if (end) break;
 		int state = isEnd(resBGR[channel], order, eofRow, eofCol);
-		cout << order << " " << "State: " << state << endl;
+		//cout << order << " " << "State: " << state << endl;
 		int totalBlocks = 0;
 		while (totalBlocks < CUMU_END_BLOCKS)
 		{
@@ -188,15 +188,15 @@ int Decode(Mat& img, bool& end, int& order)
 	return 0;
 }
 
-int NaiveCodeVideoCapture()
+int NaiveCodeVideoCapture(char *inputPath, char *outputPath)
 {
-	VideoCapture vc = VideoCapture("out.mp4");
+	VideoCapture vc = VideoCapture(inputPath);
 	if (!vc.isOpened())
 	{
-		cout << "Can't find the video!" << endl;
+		printf("Can't find the video!\n");
 		return -1;
 	}
-
+	Detector detector;
 	Mat srcImg;
 	bool end = false;
 	int order = 0;
@@ -223,11 +223,11 @@ int NaiveCodeVideoCapture()
 		//imwrite("op" + to_string(order) + ".jpg",srcImg);
 
 
-		if (Decode(srcImg, end, order) == -1)
+		if (Decode(srcImg, end, order,outputPath) == -1)
 		{
 			vc.read(srcImg);
 			if (!srcImg.data) break;
-			Decode(srcImg, end, order);
+			Decode(srcImg, end, order,outputPath);
 		}
 		order++;
 		if (end) break;
@@ -241,13 +241,37 @@ int NaiveCodeVideoCapture()
 	return 0;
 }
 
+void usage() {
+#define USAGE_FORMAT "  %-12s  %s\n"
+	printf("%s\n", "NaiveCode Decoder");
+	printf("%s\n", "Copyright (C) by HaiyunPresentation");
+	printf("\n");
+	printf("%s\n", "Usage:");
+	printf("  %s\n", "decode.exe <input_path> <output_path>");
+	printf(USAGE_FORMAT, "input_path", "Path of your captured video");
+	printf(USAGE_FORMAT, "output_path", "Path of output file");
+	printf("\n");
 
-int main()
+}
+
+
+int main(int argc, char *argv[])
 {
-	FILE* fp = fopen("out.bin", "w");
+	if (argc < 3)
+	{
+		usage();
+		return -1;
+	}
+	char* inputPath = argv[1];
+	char* outputPath = argv[2];
+	FILE* fp = fopen(outputPath, "w");
+	if (fp == NULL)
+	{
+		printf("Can't open the output file!\n");
+	}
 	fclose(fp);
-	Detector detector;
-	NaiveCodeVideoCapture();
+
+	NaiveCodeVideoCapture(inputPath, outputPath);
 	/*Mat img = imread("x.jpg");
 	if (img.empty())
 	{
@@ -278,7 +302,7 @@ int main()
 
 	}*/
 
-	cout << endl << "Done" << endl;
+	printf("Done.\n");
 
 	return 0;
 }

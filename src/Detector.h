@@ -41,8 +41,6 @@ public:
 
 	std::vector<cv::Mat> ResizeCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
  
-	bool IsCode(cv::Mat& srcImg);
-
 	bool IsCode(cv::Mat& srcImg, int newOrder);
 
 
