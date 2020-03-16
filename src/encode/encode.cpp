@@ -31,22 +31,19 @@ int main(int argc, char *argv[])
             // Encoder.addByte(btye, isEOF);
 
         coder.resetCounter();
-        for (size_t i = 0; i < CUMU_BYTE_BOT && !isLastFrame; i++){
+        for (size_t i = 0; i < FRAME_BYTES && !isLastFrame; i++){
             byte data;
             isLastFrame = (fscanf(file, "%c", &data) == EOF);
             coder.addByte(data, isLastFrame);
         }
         
-        // resize() to extend to Frame(add DingWeiDian)
+        // resize() to extend to Frame(add Anchor)
         // write Frame to dir
-        
         cv::Mat out;
         coder.outFrame(out);
-		imshow("out", out);
-		cv::waitKey(0);
         FrameConter++;
         #ifdef  __linux__
-            cv::imwrite("output/Frame" + std::to_string(FrameConter) + ".jpg", out);
+            // cv::imwrite("output/Frame" + std::to_string(FrameConter) + ".jpg", out);
         #elif   _WIN64
             cv::imwrite("output\\Frame" + std::to_string(FrameConter) + ".jpg", out);
             WinVideo << out;
@@ -57,8 +54,8 @@ int main(int argc, char *argv[])
 
 	// if running in Linux, we use FFmpeg command
     #ifdef __linux__
-    system(("ffmpeg -y -framerate "+ std::to_string(VIDEO_FPS) +
-      " -i \'output/Frame%d.jpg\' output/Video.avi").c_str());
+    // system(("ffmpeg -y -framerate "+ std::to_string(VIDEO_FPS) +
+    //   " -i \'output/Frame%d.jpg\' output/Video.avi").c_str());
     #endif
     
     return 0;

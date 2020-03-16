@@ -10,11 +10,22 @@ class Encoder
     cv::Mat     baseAnchor;     // make the Anchor(7*7)
     
     size_t      writeByte;      // how many byte this frame has writen
+    size_t      writeChan;      // how many channel(BGR)    has writen
     cv::Size    outSize;        // the output frame size (default 512*512)
 
   private:
-    void __inByte__(byte);
-        // writeByte -> where to write, and data -> what to write
+    void __inByte__(cv::Vec3b*, byte, bool);
+        // pos -> where to write, and data -> what to write, isMask -> is start with mask==1
+        // color QR inByte by step=3
+    
+    void __initAnchor__();
+        // init the baseAnchor
+
+    void fixAnchor(cv::Mat&);
+        // fix the block of anchor in code-mat
+
+    void setAnchor(cv::Mat&);
+        // set an Anchor by given rate to mat
 
   public:
     Encoder();
