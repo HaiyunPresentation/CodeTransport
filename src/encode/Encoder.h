@@ -7,10 +7,12 @@ class Encoder
     cv::Mat     codeMatMiddle;  // size(32, 24) middle part of codemat, record 96 byte
     cv::Mat     codeMatBottom;  // size(24, 4)  bottom part of codemat, record 12 byte
                                 // totally record 120B per Frame
+
     cv::Mat     baseAnchor;     // make the Anchor(7*7)
-    
+
     size_t      writeByte;      // how many byte this frame has writen
     size_t      writeChan;      // how many channel(BGR)    has writen
+
     cv::Size    outSize;        // the output frame size (default 512*512)
 
   private:
@@ -27,6 +29,9 @@ class Encoder
     void setAnchor(cv::Mat&);
         // set an Anchor by given rate to mat
 
+    void setStatus(cv::Mat&, size_t);
+        // set status in right-bottom, show which frame & where EOF
+
   public:
     Encoder();
 
@@ -41,6 +46,6 @@ class Encoder
     void addByte(byte, bool);
         // addByte(byte data, bool isEOF);
     
-    void outFrame(cv::Mat&);
-        // resize & add dingweidian;
+    void outFrame(cv::Mat&, size_t);
+        // codeMat-base, and set output in given mat
 };

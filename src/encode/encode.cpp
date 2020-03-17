@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
         // resize() to extend to Frame(add Anchor)
         // write Frame to dir
         cv::Mat out;
-        coder.outFrame(out);
+        coder.outFrame(out, FrameCounter);
         FrameCounter++;
         #ifdef  __linux__
             // cv::imwrite("output/Frame" + std::to_string(FrameCounter) + ".jpg", out);

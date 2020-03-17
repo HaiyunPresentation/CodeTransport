@@ -42,6 +42,47 @@ void Encoder::fixAnchor(cv::Mat& fixMat){
     this->codeMatBottom.copyTo(outRect);
 }
 
+void Encoder::setStatus(cv::Mat& QRmat, size_t nFrame){
+    cv::Vec3b baseColor;
+    for (size_t i = 0; i < N_CHANNEL; i++){
+        baseColor[i] = this->writeChan > i ? PIX_BIT_ONE : PIX_BIT_ZRO;
+    }
+    cv::Mat statusMat(4, 4, CV_8UC3, cv::Scalar(baseColor));
+
+    if (baseColor != cv::Vec3b(0,0,0)){
+        byte row, col;
+        if (this->writeByte < ACC_BYTE_TOP){
+            row = this->writeByte / TOPBOT_BYTE;
+            col = this->writeByte % TOPBOT_BYTE + 1;
+        }
+        else if (this->writeByte < ACC_BYTE_MID){
+            row = (this->writeByte - ACC_BYTE_TOP) / MIDDLE_BYTE + 8;
+            col = (this->writeByte - ACC_BYTE_TOP) % MIDDLE_BYTE;
+        }
+        else if (this->writeByte < ACC_BYTE_BOT){
+            row = (this->writeByte - ACC_BYTE_MID) / TOPBOT_BYTE + 56;
+            col = (this->writeByte - ACC_BYTE_MID) % TOPBOT_BYTE + 1;
+        }
+
+        col = 8*col;
+        cv::Vec3b* pStatus = statusMat.ptr<cv::Vec3b>(0);        
+        for (size_t i = 0; i < 8; i++, pStatus++){
+            (*pStatus)[this->writeChan] = row & 0x80 ? PIX_BIT_ONE : PIX_BIT_ZRO;
+            row <<= 1;
+        }
+        for (size_t i = 0; i < 8; i++, pStatus++){
+            (*pStatus)[this->writeChan] = col & 0x80 ? PIX_BIT_ONE : PIX_BIT_ZRO;
+            col <<= 1;
+        }
+    }
+
+    statusMat.copyTo(QRmat(cv::Rect(
+        QRmat.cols - CODEMAT_ANCHOR_SIZE + 4*((nFrame%3)%2),
+        QRmat.rows - CODEMAT_ANCHOR_SIZE + 4*((nFrame%3)/2),
+        statusMat.cols, statusMat.rows
+    )));
+}
+
 void Encoder::setAnchor(cv::Mat& exMat){
     cv::Mat anchor;     // extend baseAnchor
     cv::resize(this->baseAnchor, anchor, cv::Size(BIG_ANCHOR_SIZE, BIG_ANCHOR_SIZE), 0.0f, 0.0f, 0);
@@ -86,15 +127,23 @@ void Encoder::setOutSize(size_t size_row=OUT_FRAME_SIZE, size_t size_col=OUT_FRA
 
 void Encoder::addByte(byte data, bool isEOF){
     if (isEOF){
+        // remenber writen status
+        size_t bytes = this->writeByte;
+        size_t chans = this->writeChan;
+        
         // EndFrame: add '0000 0000' until ACC_BYTE_BOT Bytes in this frame
         while(this->writeByte < FRAME_BYTES && this->writeChan < 3){
-            this->addByte(0x00, false);
+            this->addByte(0xFF, false);
         }
 
+        this->writeByte = bytes;
+        this->writeChan = chans;
         return;
     }
-
-    // data is OK
+    else if (this->writeChan >= N_CHANNEL){
+        // error
+        return;
+    }
 
     cv::Vec3b* pix;     // position of where to start write byte
     bool isMask;        // prepare for Mask, is the byte's first bit meets a black
@@ -128,6 +177,7 @@ void Encoder::addByte(byte data, bool isEOF){
         // ERROR
         return;
     }
+    
     this->__inByte__(pix, data, isMask);
     this->writeByte++;
     if (this->writeByte >= ACC_BYTE_BOT){
@@ -136,57 +186,19 @@ void Encoder::addByte(byte data, bool isEOF){
     }
 }
 
-void Encoder::outFrame(cv::Mat& out){
-/*
-    // BUG HERE
-    cv::Mat anchorMat(CODEMAT_ANCHOR_SIZE, CODEMAT_ANCHOR_SIZE, CV_8UC3);
-                            // a white part to make up the part of Anchor
-    cv::Mat QRcode;         // concat the anchorMat * 4 with the codeMat
-    cv::Mat tmpMat;         // temp
-    
-    cv::hconcat(anchorMat, this->codeMatTop, tmpMat);
-    cv::hconcat(tmpMat, anchorMat, out);                // topMat into QR code(save in out)
-    cv::vconcat(out, this->codeMatMiddle, out);            // midMat into QR code
-    cv::hconcat(anchorMat, this->codeMatBottom, tmpMat);
-    cv::hconcat(tmpMat, anchorMat, tmpMat);
-    cv::vconcat(out, tmpMat, out);                      // botMat into QR code
-            // QR code is now done(save in out)
-
-    cv::resize(out, QRcode, cv::Size(PIXEL_SIZE, PIXEL_SIZE), 0.0f, 0.0f, 0);
-            // Extend to (512 * 512), & save QR code in 'QRcode'
-
-
-    cv::resize(this->baseAnchor, anchorMat, cv::Size(BIG_ANCHOR_SIZE, BIG_ANCHOR_SIZE), 0.0f, 0.0f, 0);
-            // Extend to big Anchor
-    cv::Mat outRect = QRcode(cv::Rect(0, 0, anchorMat.cols, anchorMat.rows));
-    anchorMat.copyTo(outRect);
-            // Add the top-left Anchor
-    outRect = QRcode(cv::Rect(0, PIXEL_SIZE - BIG_ANCHOR_SIZE, anchorMat.cols, anchorMat.rows));
-    anchorMat.copyTo(outRect);
-            // Add the bottom-left Anchor
-    outRect = QRcode(cv::Rect(PIXEL_SIZE - BIG_ANCHOR_SIZE, 0, anchorMat.cols, anchorMat.rows));
-    anchorMat.copyTo(outRect);
-            // Add the top-right Anchor
-
-    cv::resize(this->baseAnchor, anchorMat, cv::Size(SML_ANCHOR_SIZE, SML_ANCHOR_SIZE), 0.0f, 0.0f, 0);
-
-    outRect = QRcode(cv::Rect(PIXEL_SIZE - SML_ANCHOR_SIZE, PIXEL_SIZE - SML_ANCHOR_SIZE,
-      anchorMat.cols, anchorMat.rows));
-    anchorMat.copyTo(outRect);
-            // Add the bottom-right Anchor
-    
-    out = cv::Mat(this->outSize, CV_8UC1, cv::Scalar(PIX_BIT_ONE));
-            // set out as white backgroud
-    outRect = out(cv::Rect((this->outSize.width - PIXEL_SIZE)/2, (this->outSize.height - PIXEL_SIZE)/2,
-      QRcode.cols, QRcode.rows));
-    QRcode.copyTo(outRect);
-            // add QRcode into white backgroud
-*/
-    this->fixAnchor(out);
-    cv::resize(out, out, cv::Size(PIXEL_SIZE, PIXEL_SIZE), 0.0f, 0.0f, 0);
+void Encoder::outFrame(cv::Mat& out, size_t nFrame){
+    cv::Mat QRcode;
+    this->fixAnchor(QRcode);
+    this->setStatus(QRcode, nFrame);
+    cv::resize(QRcode, QRcode, cv::Size(PIXEL_SIZE, PIXEL_SIZE), 0.0f, 0.0f, 0);
         // Extend to (PIXEL_SIZE * PIXEL_SIZE)
     
-    this->setAnchor(out);
-    cv::imshow("test", out);
+    this->setAnchor(QRcode);
+    cv::imshow("test", QRcode);
     cv::waitKey();
+    out = cv::Mat(OUT_FRAME_SIZE, OUT_FRAME_SIZE, CV_8UC3, cv::Scalar(255, 255, 255));
+    QRcode.copyTo(out(cv::Rect(
+        (OUT_FRAME_SIZE - PIXEL_SIZE)/2, (OUT_FRAME_SIZE - PIXEL_SIZE)/2, PIXEL_SIZE, PIXEL_SIZE)
+    ));
+
 }
