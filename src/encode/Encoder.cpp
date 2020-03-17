@@ -184,7 +184,7 @@ void Encoder::outFrame(cv::Mat& out){
 */
     this->fixAnchor(out);
     cv::resize(out, out, cv::Size(PIXEL_SIZE, PIXEL_SIZE), 0.0f, 0.0f, 0);
-        // Extend to (512 * 512)
+        // Extend to (PIXEL_SIZE * PIXEL_SIZE)
     
     this->setAnchor(out);
     cv::imshow("test", out);

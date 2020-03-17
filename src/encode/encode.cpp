@@ -11,19 +11,19 @@
 int main(int argc, char *argv[])
 {
     // open file by agrv[1]
-    // FILE* file = fopen(argv[1], "r");
-    FILE* file = fopen("in.bin", "r");
+    // FILE* file = fopen(argv[1], "rb");
+    FILE* file = fopen("in.bin", "rb");
 
     // if in Windows, write frames into this
     #ifdef _WIN64
 	cv::VideoWriter WinVideo;
-	WinVideo.open("Video.avi",cv::VideoWriter::fourcc('A', 'V', 'C', '1'), VIDEO_FPS, cv::Size(OUT_FRAME_SIZE, OUT_FRAME_SIZE), false);
+	WinVideo.open("in.mp4",cv::VideoWriter::fourcc('A', 'V', 'C', '1'), VIDEO_FPS, cv::Size(OUT_FRAME_SIZE, OUT_FRAME_SIZE), false);
     #endif
 
     Encoder coder;
     
     bool isLastFrame = false;   
-    int FrameConter = 0;        
+    int FrameCounter = 0;        
 
     while(!isLastFrame){
         // loop times : how many bytes per Frame
@@ -41,11 +41,11 @@ int main(int argc, char *argv[])
         // write Frame to dir
         cv::Mat out;
         coder.outFrame(out);
-        FrameConter++;
+        FrameCounter++;
         #ifdef  __linux__
-            // cv::imwrite("output/Frame" + std::to_string(FrameConter) + ".jpg", out);
+            // cv::imwrite("output/Frame" + std::to_string(FrameCounter) + ".jpg", out);
         #elif   _WIN64
-            cv::imwrite("output\\Frame" + std::to_string(FrameConter) + ".jpg", out);
+            cv::imwrite("Frame" + std::to_string(FrameCounter) + ".jpg", out);
             WinVideo << out;
         #endif
     }
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	// if running in Linux, we use FFmpeg command
     #ifdef __linux__
     // system(("ffmpeg -y -framerate "+ std::to_string(VIDEO_FPS) +
-    //   " -i \'output/Frame%d.jpg\' output/Video.avi").c_str());
+    //   " -i \'output/Frame%d.jpg\' output/in.mp4").c_str());
     #endif
     
     return 0;
