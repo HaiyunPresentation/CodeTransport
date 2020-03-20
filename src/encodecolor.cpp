@@ -125,10 +125,30 @@ void AddEOFLocation(Mat& img, int flames, int totalBlocks)
 	}
 }
 
+//uint8_t crc4ITU(uint8_t* data, int length)
+uint8_t crc4ITU(unsigned char data)
+{
+	uint8_t i;
+	uint8_t crc = 0;        // Initial value  
+	/*while (length--)
+	{
+		crc ^= *data++;     // crc ^= *data; data++;  */
+	crc ^= data;
+	for (i = 0; i < 8; ++i)
+	{
+		if (crc & 1)
+			crc = (crc >> 1) ^ 0x0C;// 0x0C = (reverse 0x03)>>(8-4)  
+		else
+			crc = (crc >> 1);
+	}
+	//}
+	return crc;
+}
+
+
 int main()
 {
 	FILE* fp = fopen("in.bin", "rb");
-
 
 	VideoWriter writer;
 	writer.open("in.mp4", VideoWriter::fourcc('A', 'V', 'C', '1'), OUTPUT_FPS, Size(1200, 1200), true);
@@ -157,6 +177,12 @@ int main()
 						exitSign = true;
 					}
 					chr = 255;
+					
+				}
+				char crc4;
+				if (!exitSign)
+				{
+					crc4 = crc4ITU(chr);
 				}
 
 				for (int k = 0; k < 8; k++)
@@ -179,7 +205,29 @@ int main()
 					chr = chr << 1;
 					totalBlocks++;
 				}
+				if (!exitSign)
+				{
 
+					for (int k = 0; k < 4; k++)
+					{
+						while (NON_BLOCK_AREA(totalBlocks))
+						{
+							totalBlocks++;
+						}
+						if (crc4 & 8 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_ROWS) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_ROWS) % 2))
+							|| !(crc4 & 8) && (!(totalBlocks % 2) && ((totalBlocks / BLOCK_ROWS) % 2) || (totalBlocks % 2) && !((totalBlocks / BLOCK_ROWS) % 2)))
+						{
+
+							DrawBlock(bgrImg[channel], totalBlocks / BLOCK_ROWS, totalBlocks % BLOCK_ROWS, PIX_ONE_VALUE);
+						}
+						else
+						{
+							DrawBlock(bgrImg[channel], totalBlocks / BLOCK_ROWS, totalBlocks % BLOCK_ROWS, PIX_ZRO_VALUE);
+						}
+						crc4 = crc4 << 1;
+						totalBlocks++;
+					}
+				}
 			}
 			if (!exitSign)
 			{
