@@ -3,49 +3,59 @@
 
 class Encoder
 {
-    cv::Mat     codeMatTop;     // top    part of codemat, record 48  byte; size(8row  * 48col)
-    cv::Mat     codeMatMiddle;  // middle part of codemat, record 384 byte; size(48row * 64col)
-    cv::Mat     codeMatBottom;  // bottom part of codemat, record 48  byte; size(8row  * 48col)
-                                // totally record 480B per Frame
+	/*cv::Mat     codeMatTop;     // top    part of codemat, record 48  byte; size(8row  * 48col)
+	cv::Mat     codeMatMiddle;  // middle part of codemat, record 384 byte; size(48row * 64col)
+	cv::Mat     codeMatBottom;  // bottom part of codemat, record 48  byte; size(8row  * 48col)
+								// totally record 480B per Frame*/
 
-    cv::Mat     baseAnchor;     // make the Anchor(7*7)
+	cv::Mat QRcode;				// save byte as QRcode
 
-    size_t      writeByte;      // how many byte this frame has writen
-    size_t      writeChan;      // how many channel(BGR)    has writen
 
-    cv::Size    outSize;        // the output frame size (default 1200 * 1200)
+	cv::Mat     baseAnchor;     // make the Anchor(7*7)
 
-  private:
-    void __inByte__(cv::Vec3b*, byte, bool);
-        // pos -> where to write, and data -> what to write, isMask -> is start with mask==1
-        // colorful QR input byte by step=3 (BGR 3 color channel)
-    
-    void __initAnchor__();
-        // init the baseAnchor
+	size_t      writeBit;      // how many byte this frame has been written
+	size_t      writeChan;      // how many channels (BGR)  has been written
 
-    void fixAnchor(cv::Mat&);
-        // fix the block of anchor in code-mat
+	size_t      eofBit;
+	size_t      eofChan;
 
-    void setAnchor(cv::Mat&);
-        // set an Anchor by given rate to mat
+	cv::Size    outSize;        // the output frame size (default 1200 * 1200)
 
-    void setStatus(cv::Mat&, size_t);
-        // set status in right-bottom, show which frame & where EOF
+private:
+	// pos -> where to write, and data -> what to write, isMask -> is start with mask==1, changeLocation -> where changes mask, isEOF -> is EOF
+	// colorful QR input byte by step=3 (BGR 3 color channel)
+	void __inByte__(cv::Vec3b*, byte, bool, int, bool);
 
-  public:
-    Encoder();
+	uint8_t crc4ITU(byte);
 
-    void resetCounter();
-        // set writeByte zero
+	// init the baseAnchor
+	void __initAnchor__();
 
-    void setOutSize(cv::Size);
-        // set outFrame Size
-    void setOutSize(size_t, size_t);
-        // set outFrame Size (default 512*512)
+	// fix the block of anchor in code-mat
+	void fixAnchor(cv::Mat&);
 
-    void addByte(byte, bool);
-        // addByte(byte data, bool isEOF);
-    
-    void outFrame(cv::Mat&, size_t);
-        // codeMat-base, and set output in given mat
+	// set an Anchor by given rate to mat        
+	void setAnchor(cv::Mat&);
+
+	// set status in right-bottom, show which frame & where EOF
+	void setStatus(cv::Mat&, size_t);
+
+public:
+
+	Encoder();
+
+	// set writeBit zero
+	void resetCounter();
+
+	// set outFrame Size
+	void setOutSize(cv::Size);
+
+	// set outFrame Size (default 512*512)
+	void setOutSize(size_t, size_t);
+
+	// addByte(byte data, bool isEOF);
+	void addByte(byte, bool);
+
+	// codeMat-base, and set output in given mat
+	void outFrame(cv::Mat&, size_t);
 };

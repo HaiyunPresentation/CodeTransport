@@ -4,17 +4,17 @@
 #include <opencv2/videoio.hpp>
 
 #define PIXEL_ROWS 1024
-#define BLOCK_ROWS 64
+#define BLOCK_SIDE_LENGTH 64
 #define ANCHOR_SIZE 128
-#define NON_BLOCK_AREA(x) ((x / BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS) \
-	|| x / BLOCK_ROWS >= BLOCK_ROWS - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)) \
-&& (x % BLOCK_ROWS >= BLOCK_ROWS - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS) \
-	|| x % BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)))
+#define NON_BLOCK_AREA(x) ((x / BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH) \
+	|| x / BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)) \
+&& (x % BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH) \
+	|| x % BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)))
 
 #define PIX_ONE_VALUE 0
 #define PIX_ZRO_VALUE 255
 
-#define BLOCK_SIZE (BLOCK_ROWS*BLOCK_ROWS)
+#define BLOCK_SIZE (BLOCK_SIDE_LENGTH*BLOCK_SIDE_LENGTH)
 #define CUMU_END_BLOCKS 4088
 
 #define OUTPUT_ROWS 1200
@@ -45,9 +45,9 @@ void DrawBlock(Mat& img, int i, int j, int value)
 		cout << "Block pixel value error" << endl;
 		return;
 	}
-	for (int row = PIXEL_ROWS / BLOCK_ROWS * i; row < PIXEL_ROWS / BLOCK_ROWS * (i + 1); row++)
+	for (int row = PIXEL_ROWS / BLOCK_SIDE_LENGTH * i; row < PIXEL_ROWS / BLOCK_SIDE_LENGTH * (i + 1); row++)
 	{
-		for (int col = PIXEL_ROWS / BLOCK_ROWS * j; col < PIXEL_ROWS / BLOCK_ROWS * (j + 1); col++)
+		for (int col = PIXEL_ROWS / BLOCK_SIDE_LENGTH * j; col < PIXEL_ROWS / BLOCK_SIDE_LENGTH * (j + 1); col++)
 		{
 			DrawColor(img, row, col, value);
 		}
@@ -95,8 +95,8 @@ void PrintAnchor(Mat& img, int row, int col, int size)
 void PrintBenchmark(Mat& img)
 {
 	PrintAnchor(img, 0, 0, ANCHOR_SIZE);
-	PrintAnchor(img, PIXEL_ROWS / BLOCK_ROWS * (BLOCK_ROWS) * 7 / 8 + ANCHOR_SIZE / 8, 0, ANCHOR_SIZE);
-	PrintAnchor(img, 0, PIXEL_ROWS / BLOCK_ROWS * (BLOCK_ROWS) * 7 / 8 + ANCHOR_SIZE / 8, ANCHOR_SIZE);
+	PrintAnchor(img, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (BLOCK_SIDE_LENGTH) * 7 / 8 + ANCHOR_SIZE / 8, 0, ANCHOR_SIZE);
+	PrintAnchor(img, 0, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (BLOCK_SIDE_LENGTH) * 7 / 8 + ANCHOR_SIZE / 8, ANCHOR_SIZE);
 	PrintAnchor(img, PIXEL_ROWS * 15 / 16 + ANCHOR_SIZE / 16, PIXEL_ROWS * 15 / 16 + ANCHOR_SIZE / 16, ANCHOR_SIZE / 2);
 	//imshow("Benchmark", img);
 	//waitKey();
@@ -105,8 +105,8 @@ void PrintBenchmark(Mat& img)
 void AddEOFLocation(Mat& img, int flames, int totalBlocks)
 {
 	int flameRemainder = flames % 3;
-	char rowOrder = totalBlocks / BLOCK_ROWS, colOrder = totalBlocks % BLOCK_ROWS;
-	if (rowOrder >= BLOCK_ROWS || colOrder >= BLOCK_ROWS)
+	char rowOrder = totalBlocks / BLOCK_SIDE_LENGTH, colOrder = totalBlocks % BLOCK_SIDE_LENGTH;
+	if (rowOrder >= BLOCK_SIDE_LENGTH || colOrder >= BLOCK_SIDE_LENGTH)
 	{
 		cout << "EOF location error!" << endl;
 	}
@@ -125,14 +125,11 @@ void AddEOFLocation(Mat& img, int flames, int totalBlocks)
 	}
 }
 
-//uint8_t crc4ITU(uint8_t* data, int length)
+
 uint8_t crc4ITU(unsigned char data)
 {
 	uint8_t i;
 	uint8_t crc = 0;        // Initial value  
-	/*while (length--)
-	{
-		crc ^= *data++;     // crc ^= *data; data++;  */
 	crc ^= data;
 	for (i = 0; i < 8; ++i)
 	{
@@ -141,7 +138,6 @@ uint8_t crc4ITU(unsigned char data)
 		else
 			crc = (crc >> 1);
 	}
-	//}
 	return crc;
 }
 
@@ -151,7 +147,7 @@ int main()
 	FILE* fp = fopen("in.bin", "rb");
 
 	VideoWriter writer;
-	writer.open("in.mp4", VideoWriter::fourcc('A', 'V', 'C', '1'), OUTPUT_FPS, Size(1200, 1200), true);
+	writer.open("in.mp4", VideoWriter::fourcc('a', 'v', 'c', '1'), OUTPUT_FPS, Size(1200, 1200), true);
 	int flames = 0;
 	bool exitSign = false;
 	while (!exitSign)
@@ -176,7 +172,7 @@ int main()
 						AddEOFLocation(bgrImg[channel], flames, totalBlocks);
 						exitSign = true;
 					}
-					chr = 255;
+					chr = 0;
 					
 				}
 				char crc4;
@@ -192,15 +188,15 @@ int main()
 						totalBlocks++;
 					}
 
-					if (chr & 128 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_ROWS) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_ROWS) % 2))
-						|| !(chr & 128) && (!(totalBlocks % 2) && ((totalBlocks / BLOCK_ROWS) % 2) || (totalBlocks % 2) && !((totalBlocks / BLOCK_ROWS) % 2)))
+					if (chr & 128 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2))
+						|| !(chr & 128) && (!(totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2)))
 					{
 
-						DrawBlock(bgrImg[channel], totalBlocks / BLOCK_ROWS, totalBlocks % BLOCK_ROWS, PIX_ONE_VALUE);
+						DrawBlock(bgrImg[channel], totalBlocks / BLOCK_SIDE_LENGTH, totalBlocks % BLOCK_SIDE_LENGTH, PIX_ONE_VALUE);
 					}
 					else
 					{
-						DrawBlock(bgrImg[channel], totalBlocks / BLOCK_ROWS, totalBlocks % BLOCK_ROWS, PIX_ZRO_VALUE);
+						DrawBlock(bgrImg[channel], totalBlocks / BLOCK_SIDE_LENGTH, totalBlocks % BLOCK_SIDE_LENGTH, PIX_ZRO_VALUE);
 					}
 					chr = chr << 1;
 					totalBlocks++;
@@ -214,15 +210,15 @@ int main()
 						{
 							totalBlocks++;
 						}
-						if (crc4 & 8 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_ROWS) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_ROWS) % 2))
-							|| !(crc4 & 8) && (!(totalBlocks % 2) && ((totalBlocks / BLOCK_ROWS) % 2) || (totalBlocks % 2) && !((totalBlocks / BLOCK_ROWS) % 2)))
+						if (crc4 & 8 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2))
+							|| !(crc4 & 8) && (!(totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2)))
 						{
 
-							DrawBlock(bgrImg[channel], totalBlocks / BLOCK_ROWS, totalBlocks % BLOCK_ROWS, PIX_ONE_VALUE);
+							DrawBlock(bgrImg[channel], totalBlocks / BLOCK_SIDE_LENGTH, totalBlocks % BLOCK_SIDE_LENGTH, PIX_ONE_VALUE);
 						}
 						else
 						{
-							DrawBlock(bgrImg[channel], totalBlocks / BLOCK_ROWS, totalBlocks % BLOCK_ROWS, PIX_ZRO_VALUE);
+							DrawBlock(bgrImg[channel], totalBlocks / BLOCK_SIDE_LENGTH, totalBlocks % BLOCK_SIDE_LENGTH, PIX_ZRO_VALUE);
 						}
 						crc4 = crc4 << 1;
 						totalBlocks++;

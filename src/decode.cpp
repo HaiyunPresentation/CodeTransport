@@ -1,11 +1,11 @@
 #include "decode.h"
 #include "Detector.h"
 
-#define BLOCK_ROWS 64
-#define BLOCK_SIZE (BLOCK_ROWS*BLOCK_ROWS)
+#define BLOCK_SIDE_LENGTH 64
+#define BLOCK_SIZE (BLOCK_SIDE_LENGTH*BLOCK_SIDE_LENGTH)
 #define PIXEL_ROWS 256
 #define ANCHOR_ROWS 8
-#define ANCHOR_SIZE (PIXEL_ROWS/BLOCK_ROWS*ANCHOR_ROWS)
+#define ANCHOR_SIZE (PIXEL_ROWS/BLOCK_SIDE_LENGTH*ANCHOR_ROWS)
 #define CUMU_END_BLOCKS 4088
 
 #define OUTPUT_FPS 10
@@ -28,10 +28,10 @@ int isEnd(Mat& grayImg, int order, int& eofRow, int& eofCol)
 	for (int i = 0; i < 8; i++)
 	{
 		row <<= 1;
-		int val = (*(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][0] + i / 4) + 1) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][1] + i % 4) + 1))
-			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][0] + i / 4) + 1) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][1] + i % 4) + 2))
-			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][1] + i % 4) + 1))
-			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][1] + i % 4) + 2)))
+		int val = (*(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][0] + i / 4) + 1) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][1] + i % 4) + 1))
+			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][0] + i / 4) + 1) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][1] + i % 4) + 2))
+			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][1] + i % 4) + 1))
+			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][1] + i % 4) + 2)))
 			/ 4.0;
 		if (val < 128)
 			row = row | 1;
@@ -42,17 +42,17 @@ int isEnd(Mat& grayImg, int order, int& eofRow, int& eofCol)
 	{
 		return -1;
 	}
-	if (row >= BLOCK_ROWS)
+	if (row >= BLOCK_SIDE_LENGTH)
 	{
 		return -2;
 	}
 	for (int i = 0; i < 8; i++)
 	{
 		col <<= 1;
-		int val = (*(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][0] + i / 4 + 2) + 1) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][1] + i % 4) + 1))
-			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][0] + i / 4 + 2) + 1) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][1] + i % 4) + 2))
-			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][0] + i / 4 + 2) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][1] + i % 4) + 1))
-			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][0] + i / 4 + 2) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[flameRemainder][1] + i % 4) + 2)))
+		int val = (*(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][0] + i / 4 + 2) + 1) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][1] + i % 4) + 1))
+			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][0] + i / 4 + 2) + 1) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][1] + i % 4) + 2))
+			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][0] + i / 4 + 2) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][1] + i % 4) + 1))
+			+ *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][0] + i / 4 + 2) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[flameRemainder][1] + i % 4) + 2)))
 			/ 4.0;
 		if (val < 128)
 			col = col | 1;
@@ -62,7 +62,7 @@ int isEnd(Mat& grayImg, int order, int& eofRow, int& eofCol)
 	{
 		return -1;
 	}
-	if (col >= BLOCK_ROWS || (row < ANCHOR_ROWS || row >= BLOCK_ROWS - ANCHOR_ROWS) && (col < ANCHOR_ROWS || col >= BLOCK_ROWS - ANCHOR_ROWS))
+	if (col >= BLOCK_SIDE_LENGTH || (row < ANCHOR_ROWS || row >= BLOCK_SIDE_LENGTH - ANCHOR_ROWS) && (col < ANCHOR_ROWS || col >= BLOCK_SIDE_LENGTH - ANCHOR_ROWS))
 	{
 		return -2;
 	}
@@ -91,7 +91,7 @@ int judgeOrder(Mat& srcImg, int order)
 
 	for (int i = 0; i < 16; i++)
 	{
-		preVal += *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[(remainder + 2) % 3][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[(remainder + 2) % 3][1] + i % 4) + 2));
+		preVal += *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[(remainder + 2) % 3][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[(remainder + 2) % 3][1] + i % 4) + 2));
 		//circle(img2, , 2, Scalar(255));
 	}
 	preVal /= 16;
@@ -100,7 +100,7 @@ int judgeOrder(Mat& srcImg, int order)
 
 	for (int i = 0; i < 16; i++)
 	{
-		curVal += *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[remainder][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[remainder][1] + i % 4) + 2));
+		curVal += *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[remainder][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[remainder][1] + i % 4) + 2));
 	}
 	curVal /= 16;
 	// normal
@@ -108,7 +108,7 @@ int judgeOrder(Mat& srcImg, int order)
 
 	for (int i = 0; i < 16; i++)
 	{
-		nxtVal += *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[(remainder + 1) % 3][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_ROWS * (flameStep[(remainder + 1) % 3][1] + i % 4) + 2));
+		nxtVal += *(grayImg.data + grayImg.step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[(remainder + 1) % 3][0] + i / 4) + 2) + grayImg.step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (flameStep[(remainder + 1) % 3][1] + i % 4) + 2));
 	}
 	nxtVal /= 16;
 	if (nxtVal < 128)	return 1;
@@ -216,21 +216,21 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath)
 			unsigned char chr = '\0', crc = '\0';
 			for (int bit = 0; bit < 8; bit++)
 			{
-				while ((totalBlocks / BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)
-					|| totalBlocks / BLOCK_ROWS >= BLOCK_ROWS - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS))
-					&& (totalBlocks % BLOCK_ROWS >= BLOCK_ROWS - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)
-						|| totalBlocks % BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)))
+				while ((totalBlocks / BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)
+					|| totalBlocks / BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH))
+					&& (totalBlocks % BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)
+						|| totalBlocks % BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)))
 				{
 					totalBlocks++;
 				}
-				int val = (*(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks / BLOCK_ROWS) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks % BLOCK_ROWS) + 1))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks / BLOCK_ROWS) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks % BLOCK_ROWS) + 2))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks / BLOCK_ROWS) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks % BLOCK_ROWS) + 1))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks / BLOCK_ROWS) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks % BLOCK_ROWS) + 2)))
+				int val = (*(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
+					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2))
+					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
+					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)))
 					/ 4.0;
 				chr = chr << 1;
-				if (val < 128 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_ROWS) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_ROWS) % 2))
-					|| val >= 128 && !(!(totalBlocks % 2) && !((totalBlocks / BLOCK_ROWS) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_ROWS) % 2)))
+				if (val < 128 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2))
+					|| val >= 128 && !(!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2)))
 				{
 
 					chr = chr | 1;
@@ -239,11 +239,10 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath)
 				totalBlocks++;
 			}
 
-			//cout << (int)chr << endl;
-			if (chr == 255)
+			if (chr == 0)
 			{
-				//if (endState == 0 && eofRow == (totalBlocks - 8) / BLOCK_ROWS && eofCol == (totalBlocks - 8) % BLOCK_ROWS)
-				if (endState == 0 && totalBlocks - 8 >= eofRow * BLOCK_ROWS + eofCol)
+
+				if (endState == 0 && totalBlocks - 8 >= eofRow * BLOCK_SIDE_LENGTH + eofCol)
 				{
 					end = true;
 					break;
@@ -252,21 +251,21 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath)
 
 			for (int crcBit = 0; crcBit < 4; crcBit++)
 			{
-				while ((totalBlocks / BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)
-					|| totalBlocks / BLOCK_ROWS >= BLOCK_ROWS - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS))
-					&& (totalBlocks % BLOCK_ROWS >= BLOCK_ROWS - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)
-						|| totalBlocks % BLOCK_ROWS < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_ROWS)))
+				while ((totalBlocks / BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)
+					|| totalBlocks / BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH))
+					&& (totalBlocks % BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)
+						|| totalBlocks % BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)))
 				{
 					totalBlocks++;
 				}
-				int val = (*(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks / BLOCK_ROWS) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks % BLOCK_ROWS) + 1))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks / BLOCK_ROWS) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks % BLOCK_ROWS) + 2))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks / BLOCK_ROWS) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks % BLOCK_ROWS) + 1))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks / BLOCK_ROWS) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_ROWS * (totalBlocks % BLOCK_ROWS) + 2)))
+				int val = (*(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
+					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2))
+					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
+					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)))
 					/ 4.0;
 				crc = crc << 1;
-				if (val < 128 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_ROWS) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_ROWS) % 2))
-					|| val >= 128 && !(!(totalBlocks % 2) && !((totalBlocks / BLOCK_ROWS) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_ROWS) % 2)))
+				if (val < 128 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2))
+					|| val >= 128 && !(!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2)))
 				{
 
 					crc = crc | 1;
@@ -375,15 +374,15 @@ void usage()
 
 int main(int argc, char* argv[])
 {
-	if (argc < 3)
+	/*if (argc < 3)
 	{
 		usage();
 		return -1;
 	}
 	char* inputPath = argv[1];
-	char* outputPath = argv[2];
-	//char inputPath[] = "out.mp4";
-	//char outputPath[] = "out.bin";
+	char* outputPath = argv[2];*/
+	char inputPath[] = "out.mp4";
+	char outputPath[] = "out.bin";
 
 	FILE* fp = fopen(outputPath, "w");
 	if (fp == NULL)
@@ -400,7 +399,7 @@ int main(int argc, char* argv[])
 	}
 	fclose(fep);
 
-	NaiveCodeVideoCapture(inputPath, outputPath);
+	//NaiveCodeVideoCapture(inputPath, outputPath);
 	/*Mat img = imread("x.jpg");
 	if (img.empty())
 	{
@@ -408,7 +407,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	cout << detector.IsCode(img);*/
-	/*
+	
 	vector<cv::Mat> dstBGR;
 	Mat grayImg;
 	int ord = 0;
@@ -431,7 +430,7 @@ int main(int argc, char* argv[])
 		cout << endl;
 
 	}
-	*/
+	
 	printf("Done.\n");
 
 	return 0;
