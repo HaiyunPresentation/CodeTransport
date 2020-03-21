@@ -23,7 +23,7 @@ class Detector
 
 	// Get the center vector of four anchors
 	int CenterPoint(std::vector<cv::Point>& anchor, cv::Point2f& p);
-	
+
 	// Judge the top-left one from three large anchors
 	int JudgeTopLeft(cv::Point2f* center);
 
@@ -31,7 +31,7 @@ public:
 
 	bool GetCropCode(cv::Mat& srcImg, std::vector<cv::Mat>& dst);
 
-	int FindAnchors(cv::Mat& srcImg, std::vector<std::vector<cv::Point>>& qrPoint);
+	int FindAnchors(cv::Mat& srcImg, std::vector<std::vector<cv::Point>>& qrPoint, int mode);
 
 	bool IsAnchor(std::vector<cv::Point>& contour, cv::Mat& img, int i);
 
@@ -39,9 +39,9 @@ public:
 
 	cv::Mat CropCode(cv::Mat& img, cv::RotatedRect& rotatedRect, cv::Point2f center[4], int topLeftOrder, int buttonRightOrder);
 
-	std::vector<cv::Mat> ResizeCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint);
- 
-	bool IsCode(cv::Mat& srcImg, int newOrder);
+	std::vector<cv::Mat> ResizeCode(cv::Mat& img, std::vector<std::vector<cv::Point>>& qrPoint, int mode);
+
+	bool IsCode(cv::Mat& srcImg);
 
 
 

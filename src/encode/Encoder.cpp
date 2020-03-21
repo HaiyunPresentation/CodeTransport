@@ -166,8 +166,8 @@ Encoder::Encoder() :
 	QRcode(cv::Mat(CODEMAT_MIDDLE_SIZE, CODEMAT_MIDDLE_SIZE, CV_8UC3, cv::Scalar(255, 255, 255))),
 	baseAnchor(cv::Mat::zeros(BASE_ANCHOR_SIZE, BASE_ANCHOR_SIZE, CV_8UC3)),
 	outSize(cv::Size(OUT_FRAME_SIZE, OUT_FRAME_SIZE)) {
-	this->eofBit = -1;
-	this->eofChan = -1;
+	this->eofBit = -1;		//eofBit is the maximum of size_t type
+	this->eofChan = -1;		//eofChan is the maximum of size_t type
 	this->writeBit = 0;
 	this->__initAnchor__();
 }
@@ -262,13 +262,13 @@ void Encoder::outFrame(cv::Mat& out, size_t nFrame) {
 
 	cv::resize(this->QRcode, this->QRcode, cv::Size(PIXEL_SIDE_LENGTH, PIXEL_SIDE_LENGTH), 0.0f, 0.0f, 0);
 	// Extend to (PIXEL_SIDE_LENGTH * PIXEL_SIDE_LENGTH)
-//cv::imshow("QRC", this->QRcode);
-//cv::waitKey();
+	// cv::imshow("QRC", this->QRcode);
+	// cv::waitKey();
 
 	this->setAnchor(this->QRcode);
 	// add 4 Anchor
 
-	out = cv::Mat(OUT_FRAME_SIZE, OUT_FRAME_SIZE, CV_8UC3, cv::Scalar(255, 255, 255));
+	out = cv::Mat(OUT_FRAME_SIZE, OUT_FRAME_SIZE, CV_8UC3, cv::Scalar(200, 200, 200));
 	// set ouput backgroud color as white( add white rim to QRcode )
 	this->QRcode.copyTo(out(cv::Rect(
 		(OUT_FRAME_SIZE - PIXEL_SIDE_LENGTH) / 2, (OUT_FRAME_SIZE - PIXEL_SIDE_LENGTH) / 2, PIXEL_SIDE_LENGTH, PIXEL_SIDE_LENGTH)

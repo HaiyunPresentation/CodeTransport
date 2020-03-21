@@ -7,6 +7,10 @@
 #define ANCHOR_ROWS 8
 #define ANCHOR_SIZE (PIXEL_ROWS/BLOCK_SIDE_LENGTH*ANCHOR_ROWS)
 #define CUMU_END_BLOCKS 4088
+#define NON_BLOCK_AREA_LARGE(x) (x / BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)\
+|| x / BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH))\
+&& (x % BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)\
+	|| x % BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH))
 
 #define OUTPUT_FPS 10
 #define VERSION "200320"
@@ -18,10 +22,11 @@ using namespace cv;
 
 Detector detector;
 int flameStep[3][2] = { {56,56},{56,60},{60,56} };
+int newOrder = -1;
 
 int isEnd(Mat& grayImg, int order, int& eofRow, int& eofCol)
 {
-	//imshow("", grayImg);
+	//imshow("", srcImg);
 	//waitKey();
 	unsigned char row = 0x00, col = row;
 	int flameRemainder = order % 3;
@@ -84,7 +89,7 @@ int judgeOrder(Mat& srcImg, int order)
 	Mat grayImg = srcImg.clone();
 	cvtColor(srcImg, grayImg, COLOR_BGR2GRAY);
 	threshold(grayImg, grayImg, 150, 255, THRESH_BINARY | THRESH_OTSU);
-	//imshow("", grayImg);
+	//imshow("", srcImg);
 	//waitKey();
 	int fix = 0, remainder = order % 3;
 	int preVal = 0, curVal = 0, nxtVal = 0;
@@ -154,7 +159,10 @@ static unsigned char const table_byte[256] = {
 
 };
 
-
+/*
+ * Check CRC-4/ITU result.
+ * Return 0 if right or return -1 if wrong.
+ */
 int crc4ITUCheck(unsigned char chr, char crc)
 {
 	if (table_byte[chr] != crc)
@@ -162,16 +170,14 @@ int crc4ITUCheck(unsigned char chr, char crc)
 	return 0;
 }
 
-
-int Decode(Mat& img, bool& end, int& order, char* outputPath)
+int Decode(Mat& img, bool& end, int& order, char* outputPath, char* valPath)
 {
 
 	vector<cv::Mat> resBGR;
 	if (!detector.GetCropCode(img, resBGR))
 	{
 		printf("Can't detect %d\n", order);
-		//imshow
-		imwrite("err" + to_string(order) + ".jpg", img);
+		//imwrite(to_string(order)+"err" + to_string(newOrder++) + ".jpg", img);
 		return -1;
 	}
 	int judge = judgeOrder(resBGR[3], order);
@@ -179,13 +185,15 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath)
 
 	if (judge == -1)
 	{
-		//imwrite(VERSION + to_string(order) + "F.jpg", img);
+		printf("Backward!\n");
+		//imwrite(to_string(order)+"backward" + to_string(newOrder++) + "F.jpg", img);
 		return -1;
 	}
 	else if (judge == 1)
 	{
 		printf("Miss a flame\n");
 		order++;
+		newOrder++;
 		printf("%d", order);
 	}
 
@@ -197,13 +205,12 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath)
 	}
 
 
-	imshow("", resBGR[3]);
-	waitKey();
+	//imshow("", resBGR[3]);
+	//waitKey();
 	printf("Detect %d\n", order);
 
-	char errlogPath[] = "err.bin";
 	FILE* fp = fopen(outputPath, "ab+");
-	FILE* fep = fopen(errlogPath, "ab+");
+	FILE* fvp = fopen(valPath, "ab+");
 
 
 	for (int channel = 0; channel < 3; channel++)
@@ -216,25 +223,26 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath)
 			unsigned char chr = '\0', crc = '\0';
 			for (int bit = 0; bit < 8; bit++)
 			{
-				while ((totalBlocks / BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)
-					|| totalBlocks / BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH))
-					&& (totalBlocks % BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)
-						|| totalBlocks % BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)))
+				while (NON_BLOCK_AREA_LARGE(totalBlocks))
 				{
 					totalBlocks++;
 				}
-				int val = (*(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
+				int val = (resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1)
+					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)
+					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1)
+					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)
+					)/4;
+
+				/*int val = (*(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
 					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2))
 					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
 					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)))
-					/ 4.0;
+					/ 4.0;*/
 				chr = chr << 1;
 				if (val < 128 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2))
 					|| val >= 128 && !(!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2)))
 				{
-
 					chr = chr | 1;
-
 				}
 				totalBlocks++;
 			}
@@ -251,18 +259,20 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath)
 
 			for (int crcBit = 0; crcBit < 4; crcBit++)
 			{
-				while ((totalBlocks / BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)
-					|| totalBlocks / BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH))
-					&& (totalBlocks % BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)
-						|| totalBlocks % BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)))
+				while (NON_BLOCK_AREA_LARGE(totalBlocks))
 				{
 					totalBlocks++;
 				}
-				int val = (*(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
+				int val = (resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1)
+					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)
+					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1)
+					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)
+					) / 4;
+				/*int val = (*(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
 					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2))
 					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
 					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)))
-					/ 4.0;
+					/ 4.0;*/
 				crc = crc << 1;
 				if (val < 128 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2))
 					|| val >= 128 && !(!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2)))
@@ -273,33 +283,20 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath)
 				}
 				totalBlocks++;
 			}
-			//if (chr % 2)
-			//	chr -= 1;
-			//else
-			//	chr += 1;
 
 			if (crc4ITUCheck(chr, crc))
-				fprintf(fep, "%c", 0x00);
-			else fprintf(fep, "%c", 0xff);
-			//fprintf(fp,"error");
+				fprintf(fvp, "%c", 0x00);
+			else fprintf(fvp, "%c", 0xff);
 
 			fprintf(fp, "%c", chr);
-
-
-			//fprintf(fp, "%c", chr);
-
 		}
 	}
-
-	//cout << totalBlocks << endl;
-
 	fclose(fp);
-	fclose(fep);
-
+	fclose(fvp);
 	return 0;
 }
 
-int NaiveCodeVideoCapture(char* inputPath, char* outputPath)
+int NaiveCodeVideoCapture(char* inputPath, char* outputPath, char* valPath)
 {
 	VideoCapture vc = VideoCapture(inputPath);
 	if (!vc.isOpened())
@@ -311,15 +308,13 @@ int NaiveCodeVideoCapture(char* inputPath, char* outputPath)
 	Mat srcImg;
 	bool end = false;
 	int order = 0;
-	int newOrder = 0;
+
 	do
 	{
+		newOrder++;
 		vc.read(srcImg);
 		if (!srcImg.data) break;
-		//if (srcImg.rows > 1000)
-		//	resize(srcImg, srcImg, Size(srcImg.cols / 5, srcImg.rows / 5));
-		//imshow("src", srcImg);
-	} while (!detector.IsCode(srcImg, newOrder++));
+	} while (!detector.IsCode(srcImg));
 
 	/*for (int i = 1; i <= (30 / OUTPUT_FPS - 1) / 2; i++)
 	{
@@ -331,18 +326,12 @@ int NaiveCodeVideoCapture(char* inputPath, char* outputPath)
 	{
 		//imwrite("op" + to_string(order) + ".jpg",srcImg);
 		int decodeState = 0;
-		while ((decodeState = Decode(srcImg, end, order, outputPath)) == -1 || decodeState == -2)
+		while ((decodeState = Decode(srcImg, end, order, outputPath, valPath)) == -1 || decodeState == -2)
 		{
 			vc.read(srcImg);
 			if (!srcImg.data) break;
 		}
 
-		/*if (Decode(srcImg, end, order, outputPath) == -1)
-		{
-			vc.read(srcImg);
-			if (!srcImg.data) break;
-			Decode(srcImg, end, order, outputPath);
-		}*/
 		order++;
 		printf("%d\n", order);
 		if (end) break;
@@ -364,9 +353,10 @@ void usage()
 	printf("%s\n", "Copyright (C) by HaiyunPresentation");
 	printf("\n");
 	printf("%s\n", "Usage:");
-	printf("  %s\n", "decode.exe <input_path> <output_path>");
+	printf("  %s\n", "decode.exe <input_path> <output_path> <val_path>");
 	printf(USAGE_FORMAT, "input_path", "Path of your captured video");
 	printf(USAGE_FORMAT, "output_path", "Path of output file");
+	printf(USAGE_FORMAT, "val_path", "Path of val file");
 	printf("\n");
 
 }
@@ -374,15 +364,17 @@ void usage()
 
 int main(int argc, char* argv[])
 {
-	/*if (argc < 3)
+	if (argc < 4)
 	{
 		usage();
 		return -1;
 	}
 	char* inputPath = argv[1];
-	char* outputPath = argv[2];*/
-	char inputPath[] = "out.mp4";
+	char* outputPath = argv[2];
+	char* valPath = argv[3];
+	/*char inputPath[] = "out.mp4";
 	char outputPath[] = "out.bin";
+	char valPath[] = "out.val";*/
 
 	FILE* fp = fopen(outputPath, "w");
 	if (fp == NULL)
@@ -391,30 +383,23 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	fclose(fp);
-	FILE* fep = fopen("err.bin", "w");
-	if (fep == NULL)
+	FILE* fvp = fopen(valPath, "w");
+	if (fvp == NULL)
 	{
-		printf("Can't open the output file!\n");
+		printf("Can't open the val file!\n");
 		return -1;
 	}
-	fclose(fep);
+	fclose(fvp);
 
-	//NaiveCodeVideoCapture(inputPath, outputPath);
-	/*Mat img = imread("x.jpg");
-	if (img.empty())
-	{
-		cout << "Image Not Found";
-		return 0;
-	}
-	cout << detector.IsCode(img);*/
-	
-	vector<cv::Mat> dstBGR;
-	Mat grayImg;
+	NaiveCodeVideoCapture(inputPath, outputPath, valPath);
+
+	/*vector<cv::Mat> dstBGR;
+	Mat srcImg;
 	int ord = 0;
-	for (; ord <= 13; ord++)
+	for (; ord < 14; ord++)
 	{
-		grayImg = imread(".\\test" + to_string(ord) + ".jpg");
-		if (grayImg.empty())
+		srcImg = imread(".\\Frame" + to_string(ord+1) + ".jpg");
+		if (srcImg.empty())
 		{
 			cout << "Image Not Found";
 			//break;
@@ -422,15 +407,13 @@ int main(int argc, char* argv[])
 		else
 		{
 			bool end = false;
-			cout << ord << " : " << detector.GetCropCode(grayImg, dstBGR) << " ";
-
-			Decode(grayImg, end,ord,outputPath);
-
+			cout << ord << " : " << detector.GetCropCode(srcImg, dstBGR) << " ";
+			Decode(srcImg, end, ord, outputPath, valPath);
 		}
 		cout << endl;
 
 	}
-	
+	*/
 	printf("Done.\n");
 
 	return 0;
