@@ -15,19 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Detector.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="decode.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
+    <ClInclude Include="decode\decode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="decode\Detector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="decode.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Detector.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
+    <ClCompile Include="decode\decode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="decode\Detector.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

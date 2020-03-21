@@ -19,12 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="decode.cpp" />
-    <ClCompile Include="Detector.cpp" />
+    <ClInclude Include="decode\decode.h" />
+    <ClInclude Include="decode\Detector.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Detector.h" />
-    <ClInclude Include="decode.h" />
+    <ClCompile Include="decode\decode.cpp" />
+    <ClCompile Include="decode\Detector.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

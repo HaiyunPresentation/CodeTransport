@@ -30,15 +30,11 @@
 #define MIDDLE_BYTE         (CODEMAT_MIDDLE_SIZE/12)
 	// how many bytes per row in top/bottom part
 
-#define ACC_BYTE_TOP        32
-#define ACC_BYTE_MID        288
-#define ACC_BYTE_BOT        320
+
 #define ACC_REAL_BIT_BOT    3840
 #define ACC_BIT_BOT         4088
 	// accumulative byte in each part of code-mat(top / middle / bottom)
 
-#define FRAME_BYTES         (ACC_BYTE_BOT*N_CHANNEL)
-	// how many byte per frame
 
 #define FRAME_BITS          (ACC_REAL_BIT_BOT*N_CHANNEL)
 
@@ -46,7 +42,7 @@
 #define PIX_BIT_ZRO         255
 	// bit(0) set as color 0, bit(1) set as color 255
 
-#define VIDEO_FPS           10
+#define VIDEO_FPS           20
 	// output QRcode into video by this frame-rate
 
 #define TEST_HERE    std::cout << "test success here" << std::endl;

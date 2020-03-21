@@ -11,10 +11,10 @@ bool Detector::GetCropCode(Mat& srcImg, vector<Mat>& dst)
 	vector<Mat> bgrChannel;
 	cv::split(srcImg, bgrChannel);
 	FindAnchors(srcImg, qrPoint, mode);
-	cout << "qrPoint.size()==" << qrPoint.size();
+	//cout << "qrPoint.size()==" << qrPoint.size();
 	if (qrPoint.size() == 4)
 	{
-		cout << endl;
+		//cout << endl;
 		dst = ResizeCode(srcImg, qrPoint, mode);
 		return true;
 	}
@@ -24,23 +24,23 @@ bool Detector::GetCropCode(Mat& srcImg, vector<Mat>& dst)
 		FindAnchors(bgrChannel[i], qrPoint, mode);
 		if (qrPoint.size() == 4)
 		{
-			cout << ", " << qrPoint.size() << endl;
+			//cout << ", " << qrPoint.size() << endl;
 
 			dst = ResizeCode(srcImg, qrPoint, mode);
 			return true;
 		}
 		else
 		{
-			cout << ", " << qrPoint.size();
+			//cout << ", " << qrPoint.size();
 			qrPoint.clear();
 		}
 	}
 	mode = 0;
 	FindAnchors(srcImg, qrPoint, mode);
-	cout << ", " << qrPoint.size();
+	//cout << ", " << qrPoint.size();
 	if (qrPoint.size() == 4)
 	{
-		cout << endl;
+		//cout << endl;
 		dst = ResizeCode(srcImg, qrPoint, mode);
 		return true;
 	}
@@ -50,18 +50,18 @@ bool Detector::GetCropCode(Mat& srcImg, vector<Mat>& dst)
 		FindAnchors(bgrChannel[i], qrPoint, mode);
 		if (qrPoint.size() == 4)
 		{
-			cout << ", " << qrPoint.size() << endl;
+			//cout << ", " << qrPoint.size() << endl;
 
 			dst = ResizeCode(srcImg, qrPoint, mode);
 			return true;
 		}
 		else
 		{
-			cout << ", " << qrPoint.size();
+			//cout << ", " << qrPoint.size();
 			qrPoint.clear();
 		}
 	}
-	cout << endl;
+	//cout << endl;
 	return false;
 
 }
@@ -79,9 +79,9 @@ int Detector::FindAnchors(Mat& srcImg, vector<vector<Point>>& qrPoint, int mode)
 	// Binarization
 	Mat thresholdOutput;
 	if (mode == 0)
-		threshold(srcGray, thresholdOutput, 160, 255, THRESH_BINARY);
+		threshold(srcGray, thresholdOutput, 170, 255, THRESH_BINARY);
 	else if (mode == 1)
-		threshold(srcGray, thresholdOutput, 160, 255, THRESH_OTSU);
+		threshold(srcGray, thresholdOutput, 170, 255, THRESH_OTSU);
 	else
 		return -1;
 	/*namedWindow("Threshold_output");
@@ -489,9 +489,9 @@ vector<Mat> Detector::ResizeCode(Mat& srcImg, vector<vector<Point>>& qrPoint, in
 		//Mat thresholdOutput;
 		//cvtColor(bgrOutput[channel], thresholdOutput, COLOR_BGR2GRAY);
 		if (mode == 0)
-			threshold(bgrOutput[channel], bgrOutput[channel], 160, 255, THRESH_BINARY);
+			threshold(bgrOutput[channel], bgrOutput[channel], 170, 255, THRESH_BINARY);
 		else if (mode == 1)
-			threshold(bgrOutput[channel], bgrOutput[channel], 160, 255, THRESH_OTSU);
+			threshold(bgrOutput[channel], bgrOutput[channel], 170, 255, THRESH_OTSU);
 
 		resize(bgrOutput[channel], bgrOutput[channel], Size2i(256, 256));
 		//imshow("thres"+to_string(channel), bgrOutput[channel]);
@@ -509,10 +509,10 @@ bool Detector::IsCode(Mat& srcImg)
 	vector<vector<Point>> qrPoint;
 	int mode = 0;
 	FindAnchors(srcImg, qrPoint, mode);
-	cout << "qrPoint.size()==" << qrPoint.size();
+	//cout << "qrPoint.size()==" << qrPoint.size();
 	if (qrPoint.size() == 4)
 	{
-		cout << endl;
+		//cout << endl;
 		return true;
 	}
 	vector<Mat> bgrChannel;
@@ -538,21 +538,21 @@ bool Detector::IsCode(Mat& srcImg)
 			FindAnchors(bgrChannel[i], qrPoint, mode);
 			if (qrPoint.size() == 4)
 			{
-				cout << ", " << qrPoint.size() << endl;
+				//cout << ", " << qrPoint.size() << endl;
 				return true;
 			}
 			else
 			{
-				cout << ", " << qrPoint.size();
+				//cout << ", " << qrPoint.size();
 				qrPoint.clear();
 			}
 		}
 		mode = 1;
 		FindAnchors(srcImg, qrPoint, mode);
-		cout << ", " << qrPoint.size();
+		//cout << ", " << qrPoint.size();
 		if (qrPoint.size() == 4)
 		{
-			cout << endl;
+			//cout << endl;
 			return true;
 		}
 		for (int i = 0; i < 3; i++)
@@ -561,17 +561,17 @@ bool Detector::IsCode(Mat& srcImg)
 			FindAnchors(bgrChannel[i], qrPoint, mode);
 			if (qrPoint.size() == 4)
 			{
-				cout << ", " << qrPoint.size() << endl;
+				//cout << ", " << qrPoint.size() << endl;
 				return true;
 			}
 			else
 			{
-				cout << ", " << qrPoint.size();
+				//cout << ", " << qrPoint.size();
 				qrPoint.clear();
 			}
 		}
-		cout << endl;
+		//cout << endl;
 	}
-	cout << endl;
+	//cout << endl;
 	return (qrPoint.size() == 4);
 }

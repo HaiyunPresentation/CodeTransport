@@ -12,8 +12,7 @@
 && (x % BLOCK_SIDE_LENGTH >= BLOCK_SIDE_LENGTH - ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH)\
 	|| x % BLOCK_SIDE_LENGTH < ANCHOR_SIZE / (PIXEL_ROWS / BLOCK_SIDE_LENGTH))
 
-#define OUTPUT_FPS 10
-#define VERSION "200320"
+#define OUTPUT_FPS 15
 
 
 using namespace std;
@@ -88,7 +87,7 @@ int judgeOrder(Mat& srcImg, int order)
 {
 	Mat grayImg = srcImg.clone();
 	cvtColor(srcImg, grayImg, COLOR_BGR2GRAY);
-	threshold(grayImg, grayImg, 150, 255, THRESH_BINARY | THRESH_OTSU);
+	threshold(grayImg, grayImg, 120, 255, THRESH_BINARY | THRESH_OTSU);
 	//imshow("", srcImg);
 	//waitKey();
 	int fix = 0, remainder = order % 3;
@@ -170,13 +169,18 @@ int crc4ITUCheck(unsigned char chr, char crc)
 	return 0;
 }
 
+int addUselessFrameInfo()
+{
+	return 0;
+}
+
 int Decode(Mat& img, bool& end, int& order, char* outputPath, char* valPath)
 {
 
 	vector<cv::Mat> resBGR;
 	if (!detector.GetCropCode(img, resBGR))
 	{
-		printf("Can't detect %d\n", order);
+		//printf("Can't detect %d\n", order);
 		//imwrite(to_string(order)+"err" + to_string(newOrder++) + ".jpg", img);
 		return -1;
 	}
@@ -185,21 +189,22 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath, char* valPath)
 
 	if (judge == -1)
 	{
-		printf("Backward!\n");
+		//printf("Backward!\n");
 		//imwrite(to_string(order)+"backward" + to_string(newOrder++) + "F.jpg", img);
 		return -1;
 	}
 	else if (judge == 1)
 	{
-		printf("Miss a flame\n");
+		printf("Miss a frame\n");
+
 		order++;
 		newOrder++;
-		printf("%d", order);
+		//printf("%d", order);
 	}
 
 	if (judge == -2)
 	{
-		printf("judge==-2\n");
+		//printf("judge==-2\n");
 		if (isEnd(resBGR[0], order, eofRow, eofCol) != 0)
 			return -2;
 	}
@@ -208,6 +213,7 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath, char* valPath)
 	//imshow("", resBGR[3]);
 	//waitKey();
 	printf("Detect %d\n", order);
+	//imwrite("output"+to_string(order) + ".jpg", img);
 
 	FILE* fp = fopen(outputPath, "ab+");
 	FILE* fvp = fopen(valPath, "ab+");
@@ -231,13 +237,8 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath, char* valPath)
 					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)
 					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1)
 					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)
-					)/4;
+					) / 4;
 
-				/*int val = (*(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)))
-					/ 4.0;*/
 				chr = chr << 1;
 				if (val < 128 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2))
 					|| val >= 128 && !(!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2)))
@@ -268,11 +269,7 @@ int Decode(Mat& img, bool& end, int& order, char* outputPath, char* valPath)
 					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1)
 					+ resBGR[channel].at<uchar>(PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2, PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)
 					) / 4;
-				/*int val = (*(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 1) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 1))
-					+ *(resBGR[channel].data + resBGR[channel].step[0] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks / BLOCK_SIDE_LENGTH) + 2) + resBGR[channel].step[1] * (PIXEL_ROWS / BLOCK_SIDE_LENGTH * (totalBlocks % BLOCK_SIDE_LENGTH) + 2)))
-					/ 4.0;*/
+
 				crc = crc << 1;
 				if (val < 128 && (!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2))
 					|| val >= 128 && !(!(totalBlocks % 2) && !((totalBlocks / BLOCK_SIDE_LENGTH) % 2) || (totalBlocks % 2) && ((totalBlocks / BLOCK_SIDE_LENGTH) % 2)))
@@ -333,7 +330,7 @@ int NaiveCodeVideoCapture(char* inputPath, char* outputPath, char* valPath)
 		}
 
 		order++;
-		printf("%d\n", order);
+		//printf("%d\n", order);
 		if (end) break;
 		vc.read(srcImg);
 		if (!srcImg.data) break;
@@ -349,14 +346,14 @@ int NaiveCodeVideoCapture(char* inputPath, char* outputPath, char* valPath)
 void usage()
 {
 #define USAGE_FORMAT "  %-12s  %s\n"
-	printf("%s\n", "NaiveCode Decoder");
-	printf("%s\n", "Copyright (C) by HaiyunPresentation");
+	printf("%s\n", "NaiveCode Decoder v20200322");
+	printf("%s\n", "Copyright (C) by Haiyun Presentation");
 	printf("\n");
 	printf("%s\n", "Usage:");
-	printf("  %s\n", "decode.exe <input_path> <output_path> <val_path>");
+	printf("  %s\n", "decode <input_path> <output_path> <val_path>");
 	printf(USAGE_FORMAT, "input_path", "Path of your captured video");
 	printf(USAGE_FORMAT, "output_path", "Path of output file");
-	printf(USAGE_FORMAT, "val_path", "Path of val file");
+	printf(USAGE_FORMAT, "val_path", "Path of val file with check info");
 	printf("\n");
 
 }

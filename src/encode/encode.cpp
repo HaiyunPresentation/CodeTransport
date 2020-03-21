@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 #ifdef  __linux__
 		cv::imwrite("Frame" + std::to_string(FrameCounter) + ".jpg", out);
 #elif   _WIN64
-		cv::imwrite("Frame" + std::to_string(FrameCounter) + ".jpg", out);
+		//cv::imwrite("Frame" + std::to_string(FrameCounter) + ".jpg", out);
 		WinVideo << out;
 #endif
 		FrameCounter++;
@@ -93,8 +93,8 @@ int main(int argc, char* argv[])
 void usage()
 {
 #define USAGE_FORMAT "  %-12s  %s\n"
-	printf("%s\n", "NaiveCode Encoder");
-	printf("%s\n", "Copyright (C) by HaiyunPresentation");
+	printf("%s\n", "NaiveCode Encoder v20200322");
+	printf("%s\n", "Copyright (C) by Haiyun Presentation");
 	printf("\n");
 	printf("%s\n", "Usage:");
 	printf("  %s\n", "encode <input_path> <output_path> <time>");

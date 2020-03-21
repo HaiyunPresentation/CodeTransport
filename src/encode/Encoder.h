@@ -31,8 +31,6 @@ private:
 	// init the baseAnchor
 	void __initAnchor__();
 
-	// fix the block of anchor in code-mat
-	void fixAnchor(cv::Mat&);
 
 	// set an Anchor by given rate to mat        
 	void setAnchor(cv::Mat&);

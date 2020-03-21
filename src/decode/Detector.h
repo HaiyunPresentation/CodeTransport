@@ -43,6 +43,4 @@ public:
 
 	bool IsCode(cv::Mat& srcImg);
 
-
-
 };
