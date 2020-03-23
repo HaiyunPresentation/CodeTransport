@@ -7,7 +7,7 @@ This belongs to Project 1 of *Computer Network and Internets* course in the Depa
 
 ## Introduction
 We name our 2-dimensional code **NaiveCode**, with 4 anchors and 3840 valid blocks per frame, each has one of 2³=8 colors (BGR channels).   
-The output rate of NaiveCode video stream is set with 20 fps.   
+The output rate of NaiveCode video stream is set with 15 fps.   
 Checked with CRC-4/ITU, the valid transport rate is above 100 Kibps.
 
 ## How to use
@@ -29,6 +29,6 @@ Play the output video and capture by mobile phone (**60 fps** or higher). Then c
 - `output_path` - Path of output file
 - `val_path` - Path of val file (check result)
 
-## Problem
+## Bug
 Results vary by device and ambient light.
 

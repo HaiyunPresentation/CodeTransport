@@ -42,7 +42,7 @@
 #define PIX_BIT_ZRO         255
 	// bit(0) set as color 0, bit(1) set as color 255
 
-#define VIDEO_FPS           20
+#define VIDEO_FPS           15
 	// output QRcode into video by this frame-rate
 
 #define TEST_HERE    std::cout << "test success here" << std::endl;
